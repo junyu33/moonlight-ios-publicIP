@@ -155,7 +155,13 @@ TCP 47989, 47984, 48010
 UDP 47998-48010
 ```
 
-规则会带上 `NFT_COMMENT` 标记，所以 `firewall-list` 和 `firewall-close` 可以找到它们。重复执行 `firewall-open` 会先删除旧的同标记规则，再添加新规则。
+所有由 `moonctl.sh` 创建的防火墙规则都会带上 `NFT_COMMENT` 标记，并且可以这样删除：
+
+```bash
+sudo ./moonctl.sh firewall-close
+```
+
+重复执行 `firewall-open` 会先删除旧的同标记规则，再添加新规则。
 
 检查本机状态：
 

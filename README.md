@@ -155,7 +155,13 @@ TCP 47989, 47984, 48010
 UDP 47998-48010
 ```
 
-Rules are tagged with `NFT_COMMENT` so `firewall-list` and `firewall-close` can find them. Re-running `firewall-open` removes old tagged rules before adding fresh ones.
+All firewall rules created by `moonctl.sh` are tagged with `NFT_COMMENT` and can be removed with:
+
+```bash
+sudo ./moonctl.sh firewall-close
+```
+
+Re-running `firewall-open` removes old tagged rules before adding fresh ones.
 
 Check local state:
 
