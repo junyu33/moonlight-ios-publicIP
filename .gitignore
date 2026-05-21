@@ -1,0 +1,8 @@
+*.log
+*.pcap
+*.pcapng
+.env
+*.conf
+*.key
+*.pub
+.DS_Store
