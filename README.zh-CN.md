@@ -239,6 +239,13 @@ sudo tail -f /tmp/moon-dnsmasq.log
 sudo tcpdump -ni <WG_IFACE> 'udp port 53 or tcp port 53'
 ```
 
+如果 `dnsmasq` 报 `cannot open log /tmp/moon-dnsmasq.log: Permission denied`，先清掉旧临时文件再启动：
+
+```bash
+sudo ./moonctl.sh dns-stop
+sudo ./moonctl.sh dns-start
+```
+
 ### 抓包显示 TLS ClientHello
 
 换一个 HTTP-clean 域名。

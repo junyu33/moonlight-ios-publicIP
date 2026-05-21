@@ -239,6 +239,13 @@ sudo tail -f /tmp/moon-dnsmasq.log
 sudo tcpdump -ni <WG_IFACE> 'udp port 53 or tcp port 53'
 ```
 
+If `dnsmasq` reports `cannot open log /tmp/moon-dnsmasq.log: Permission denied`, remove stale runtime files and start again:
+
+```bash
+sudo ./moonctl.sh dns-stop
+sudo ./moonctl.sh dns-start
+```
+
 ### Capture Shows TLS ClientHello
 
 Use a different HTTP-clean hostname.

@@ -79,14 +79,22 @@ log-facility=$DNSMASQ_LOG
 EOF
 }
 
-dns_start() {
-  write_dnsmasq_conf
-
+dns_kill_existing() {
   if [[ -f "$DNSMASQ_PID" ]]; then
     kill "$(cat "$DNSMASQ_PID")" 2>/dev/null || true
   fi
 
   pkill -f "$DNSMASQ_CONF" 2>/dev/null || true
+}
+
+dns_remove_runtime_files() {
+  rm -f "$DNSMASQ_PID" "$DNSMASQ_CONF" "$DNSMASQ_LOG"
+}
+
+dns_start() {
+  dns_kill_existing
+  dns_remove_runtime_files
+  write_dnsmasq_conf
 
   dnsmasq \
     --conf-file="$DNSMASQ_CONF" \
@@ -99,11 +107,8 @@ dns_start() {
 }
 
 dns_stop() {
-  if [[ -f "$DNSMASQ_PID" ]]; then
-    kill "$(cat "$DNSMASQ_PID")" 2>/dev/null || true
-  fi
-  pkill -f "$DNSMASQ_CONF" 2>/dev/null || true
-  rm -f "$DNSMASQ_PID" "$DNSMASQ_CONF" "$DNSMASQ_LOG"
+  dns_kill_existing
+  dns_remove_runtime_files
   echo "dnsmasq stopped"
 }
 
