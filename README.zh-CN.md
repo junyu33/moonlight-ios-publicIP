@@ -111,7 +111,7 @@ sudo env WG_ENDPOINT=moon.example.test:51820 ./wgctl.sh write-client
 
 ```bash
 sudo ./wgctl.sh up
-./wgctl.sh status
+sudo ./wgctl.sh status
 ```
 
 导入 iOS 客户端配置：
@@ -286,7 +286,7 @@ firewall-open  临时放通 WireGuard UDP 端口
 up             启动 wg-quick
 down           停止 wg-quick
 restart        重启 wg-quick
-status         显示 WireGuard 状态
+status         显示 WireGuard 状态；需要 root
 qr-client      输出 iOS 客户端配置二维码
 ```
 

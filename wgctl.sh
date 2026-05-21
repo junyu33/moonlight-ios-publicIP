@@ -22,7 +22,7 @@ fi
 
 need_root_for() {
   case "${1:-}" in
-    install|gen-keys|write-server|write-client|firewall-open|show-client|qr-client|up|down|restart)
+    install|gen-keys|write-server|write-client|firewall-open|show-client|qr-client|up|down|restart|status)
       if [[ "${EUID}" -ne 0 ]]; then
         echo "Please run '$0 $1' as root, e.g. sudo $0 $1" >&2
         exit 1
@@ -190,7 +190,7 @@ status() {
 
   echo
   echo "== wg =="
-  wg show "$WG_IFACE" 2>/dev/null || true
+  wg show "$WG_IFACE"
 }
 
 show_client() {
@@ -253,6 +253,7 @@ Examples:
   sudo $0 firewall-open
   sudo env WG_ENDPOINT=moon.example.test:51820 $0 write-client
   sudo $0 up
+  sudo $0 status
   sudo $0 qr-client
 
 Set FORCE=1 to overwrite generated config files.

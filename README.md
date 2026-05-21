@@ -111,7 +111,7 @@ Start WireGuard:
 
 ```bash
 sudo ./wgctl.sh up
-./wgctl.sh status
+sudo ./wgctl.sh status
 ```
 
 Import the iOS client config:
@@ -286,7 +286,7 @@ firewall-open  Open WireGuard UDP port temporarily
 up             Start wg-quick
 down           Stop wg-quick
 restart        Restart wg-quick
-status         Show WireGuard status
+status         Show WireGuard status; requires root
 qr-client      Print iOS client config QR code
 ```
 
