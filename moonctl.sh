@@ -140,8 +140,8 @@ firewall_close() {
 
 firewall_open() {
   firewall_close
-  nft add rule inet filter input iifname "$PUBLIC_IFACE" tcp dport { 47989, 47984, 48010 } accept comment "$NFT_PUBLIC_COMMENT"
-  nft add rule inet filter input iifname "$PUBLIC_IFACE" udp dport 47998-48010 accept comment "$NFT_PUBLIC_COMMENT"
+  nft add rule inet filter input iifname "$PUBLIC_IFACE" tcp dport { 47989, 47984, 48010 } accept comment "\"$NFT_PUBLIC_COMMENT\""
+  nft add rule inet filter input iifname "$PUBLIC_IFACE" udp dport 47998-48010 accept comment "\"$NFT_PUBLIC_COMMENT\""
   echo "Temporary public nftables rules added on $PUBLIC_IFACE"
 }
 
@@ -156,9 +156,9 @@ vpn_firewall_close() {
 
 vpn_firewall_open() {
   vpn_firewall_close
-  nft add rule inet filter input iifname "$WG_IFACE" udp dport 53 accept comment "$NFT_VPN_COMMENT"
-  nft add rule inet filter input iifname "$WG_IFACE" tcp dport { 47989, 47984, 48010 } accept comment "$NFT_VPN_COMMENT"
-  nft add rule inet filter input iifname "$WG_IFACE" udp dport 47998-48010 accept comment "$NFT_VPN_COMMENT"
+  nft add rule inet filter input iifname "$WG_IFACE" udp dport 53 accept comment "\"$NFT_VPN_COMMENT\""
+  nft add rule inet filter input iifname "$WG_IFACE" tcp dport { 47989, 47984, 48010 } accept comment "\"$NFT_VPN_COMMENT\""
+  nft add rule inet filter input iifname "$WG_IFACE" udp dport 47998-48010 accept comment "\"$NFT_VPN_COMMENT\""
   echo "Temporary VPN/LAN nftables rules added on $WG_IFACE"
 }
 
