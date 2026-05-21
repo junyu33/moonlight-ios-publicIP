@@ -145,8 +145,8 @@ UDP 47998-48010
 From the iPhone while WireGuard is enabled, check:
 
 ```sh
-dig A <MOON_HOST> @<LAN_IP> +short
-dig AAAA <MOON_HOST> @<LAN_IP> +short
+dig @<LAN_IP> A <MOON_HOST> +short
+dig @<LAN_IP> AAAA <MOON_HOST> +short
 ```
 
 Expected: A returns `<LAN_IP>`, and AAAA is empty.
