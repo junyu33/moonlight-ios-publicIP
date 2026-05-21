@@ -1,15 +1,17 @@
 # Moonlight iOS + Sunshine Split DNS
 
-[English README](README.md)
+[English README](README.md) | [完整手册](docs/full-guide.zh-CN.md)
 
-使用官方 Moonlight iOS 客户端时，让同一个域名在两个阶段解析到不同地址：
+这个仓库提供最小辅助脚本，用官方 Moonlight iOS 客户端和 Sunshine 通过一个一次性域名完成添加、配对和公网使用。
+
+核心思路：
 
 ```text
 VPN / 内网添加配对阶段 -> <MOON_HOST> 解析到 <LAN_IP>
 公网使用阶段           -> <MOON_HOST> 解析到公网 IP
 ```
 
-本仓库提供 WireGuard、临时 split DNS、临时防火墙规则和抓包辅助脚本。
+完整设置、排查、清理和命令参考见 [docs/full-guide.zh-CN.md](docs/full-guide.zh-CN.md)。
 
 ## 依赖
 
@@ -20,11 +22,15 @@ VPN / 内网添加配对阶段 -> <MOON_HOST> 解析到 <LAN_IP>
 - `dnsmasq`、`nftables`、`tcpdump`、`dig`、`ss`
 - 可选：`wireguard-tools`，可由 `wgctl.sh install` 安装
 
-**不要使用有 HSTS、HTTPS-only 跳转、Cloudflare 代理、URL forwarding 或不确定 HTTPS 历史的域名。** 如果抓包看到 `TLS ClientHello` 而不是 `GET /serverinfo`，换一个域名。
+**不要使用有 HSTS、HTTPS-only 跳转、Cloudflare 代理、URL forwarding 或不确定 HTTPS 历史的域名。**
 
-## 配置
+也不要为 Moonlight 域名创建 `AAAA`、`CNAME`、redirect、forwarding、CDN 或 proxy 记录。
 
-复制环境变量模板：
+如果 `WG_ENDPOINT` 指向的是 FRP 公网入口，而不是 Sunshine/WireGuard 主机本身，需要先在本仓库之外配置 `WG_PORT` 的 UDP FRP 转发，例如 UDP `51820`。
+
+## 快速步骤
+
+1. 配置 `.env`：
 
 ```bash
 cp .env.example .env
@@ -41,24 +47,7 @@ PUBLIC_IFACE=enp3s0
 WG_ENDPOINT=moon.example.test:51820
 ```
 
-如果 `WG_ENDPOINT` 指向的是 FRP 公网入口，而不是 Sunshine/WireGuard 主机本身，需要先在本仓库之外配置 `WG_PORT` 的 UDP FRP 转发，例如 UDP `51820`。
-
-推荐的 WireGuard 默认值：
-
-```bash
-WG_PORT=51820
-WG_SERVER_ADDR=10.0.42.1/24
-WG_CLIENT_NAME=iphone
-WG_CLIENT_ADDR=10.0.42.2/32
-WG_DNS=10.0.42.1
-WG_ALLOWED_IPS=10.0.42.0/24
-```
-
-## 公网 DNS
-
-公网 DNS 在仓库外配置。
-
-只创建：
+2. 在仓库外配置公网 DNS：
 
 ```text
 Type: A
@@ -66,67 +55,24 @@ Host: <子域名>
 Value: <公网 IP>
 ```
 
-不要创建 `AAAA`、`CNAME`、URL forwarding、HTTPS redirect 或 CDN/proxy 记录。
+3. 如果 `WG_ENDPOINT` 指向 FRP，先为 `WG_PORT` 配置外部 UDP 转发，例如 UDP `51820`。
 
-从公网检查：
-
-```sh
-dig A <MOON_HOST> +short
-dig AAAA <MOON_HOST> +short
-```
-
-期望：A 返回公网 IP，AAAA 为空。
-
-## WireGuard
-
-安装工具：
+4. 设置 WireGuard：
 
 ```bash
 sudo ./wgctl.sh install
-```
-
-生成密钥：
-
-```bash
 sudo ./wgctl.sh gen-keys
-```
-
-写服务端配置：
-
-```bash
-sudo ./wgctl.sh write-server
-```
-
-临时放通 WireGuard UDP 端口：
-
-```bash
+sudo FORCE=1 ./wgctl.sh write-server
 sudo ./wgctl.sh firewall-open
-```
-
-生成 iOS 客户端配置：
-
-```bash
-sudo env WG_ENDPOINT=moon.example.test:51820 ./wgctl.sh write-client
-```
-
-启动 WireGuard：
-
-```bash
+sudo env WG_ENDPOINT=<host>:51820 FORCE=1 ./wgctl.sh write-client
 sudo ./wgctl.sh up
 sudo ./wgctl.sh status
-```
-
-导入 iOS 客户端配置：
-
-```bash
 sudo ./wgctl.sh qr-client
 ```
 
-然后用 WireGuard iOS App 扫码导入。
+使用 `sudo ./wgctl.sh status`；WireGuard 状态需要 root 权限。
 
-## Split DNS
-
-添加 / 配对阶段启动临时 DNS：
+5. 启动 split DNS 并放通 VPN/LAN 阶段防火墙：
 
 ```bash
 sudo ./moonctl.sh dns-start
@@ -134,15 +80,7 @@ sudo ./moonctl.sh vpn-firewall-open
 sudo ./moonctl.sh vpn-firewall-list
 ```
 
-VPN/LAN 防火墙辅助命令会在 `WG_IFACE` 上放通 DNS，以及 Sunshine / Moonlight 添加、配对和串流端口：
-
-```text
-UDP 53
-TCP 47989, 47984, 48010
-UDP 47998-48010
-```
-
-iPhone 开启 WireGuard 后检查：
+iPhone 开启 WireGuard 后，在 iPhone/iSH 检查：
 
 ```sh
 dig @<LAN_IP> A <MOON_HOST> +short
@@ -151,184 +89,45 @@ dig @<LAN_IP> AAAA <MOON_HOST> +short
 
 期望：A 返回 `<LAN_IP>`，AAAA 为空。
 
-## Sunshine 防火墙
-
-临时放通 Sunshine / Moonlight 端口：
-
-```bash
-sudo ./moonctl.sh firewall-open
-sudo ./moonctl.sh firewall-list
-```
-
-脚本会放通：
-
-```text
-TCP 47989, 47984, 48010
-UDP 47998-48010
-```
-
-所有由 `moonctl.sh` 创建的防火墙规则都会带上由 `NFT_COMMENT` 派生的标记，并且可以这样删除：
-
-```bash
-sudo ./moonctl.sh firewall-close
-sudo ./moonctl.sh vpn-firewall-close
-```
-
-重复执行 `firewall-open` 或 `vpn-firewall-open` 会先删除对应阶段的旧标记规则，再添加新规则。
-
-检查本机状态：
-
-```bash
-./moonctl.sh check
-```
-
-## 添加和配对
-
-开始抓包：
+6. 通过 WireGuard 在 Moonlight 中添加和配对：
 
 ```bash
 sudo ./moonctl.sh capture-add
 ```
 
-在 iPhone 上：
+iPhone：开启 WireGuard，打开 Moonlight，添加 `<MOON_HOST>`，配对，并进入一次 Desktop。
 
-1. 开启 WireGuard。
-2. 打开 Moonlight。
-3. 添加 `<MOON_HOST>`。
-4. 配对并进入一次 Desktop。
-
-另开一个 shell 检查：
+另一个 shell：
 
 ```bash
 ./moonctl.sh grep-add
 ```
 
-期望看到：
+期望标记：
 
 ```http
 GET /serverinfo HTTP/1.1
 Host: <MOON_HOST>:47989
 ```
 
-配对成功应包含：
-
 ```xml
 <paired>1</paired>
 ```
 
-配对后不要删除 Moonlight 中已保存的 host。
-
-## 公网使用
-
-在 iPhone 上：
-
-1. 关闭 WireGuard。
-2. 确认 `<MOON_HOST>` 解析到公网 IP。
-3. 刷新 Moonlight 中已保存的 host。
-4. 进入 Desktop。
-
-可选公网抓包：
-
-```bash
-sudo ./moonctl.sh capture-public
-./moonctl.sh grep-public
-```
-
-测试结束后清理临时状态：
-
-```bash
-sudo ./moonctl.sh firewall-close
-sudo ./moonctl.sh vpn-firewall-close
-sudo ./moonctl.sh dns-stop
-```
-
-## 常见问题
-
-### VPN DNS 没结果
-
-确认 iPhone 已连接 WireGuard，并且能访问 `<LAN_IP>`。
-
-```bash
-sudo tail -f /tmp/moon-dnsmasq.log
-sudo tcpdump -ni <WG_IFACE> 'udp port 53 or tcp port 53'
-```
-
-如果 `dnsmasq` 报 `cannot open log /tmp/moon-dnsmasq.log: Permission denied`，先清掉旧临时文件再启动：
-
-```bash
-sudo ./moonctl.sh dns-stop
-sudo ./moonctl.sh dns-start
-```
-
-### 抓包显示 TLS ClientHello
-
-换一个 HTTP-clean 域名。
-
-### 公网 SYN 到了但没有 SYN-ACK
-
-重新放通临时公网防火墙规则：
+7. 使用已保存的 host 走公网：
 
 ```bash
 sudo ./moonctl.sh firewall-open
 sudo ./moonctl.sh firewall-list
 ```
 
-### Discovery 正常但串流失败
+iPhone 关闭 WireGuard，刷新 Moonlight 中已保存的 host，然后进入 Desktop。
 
-确认公网接口已放通 UDP `47998-48010`。
+8. 清理：
 
-### Moonlight 显示警告或感叹号
-
-检查：
-
-1. 公网 DNS A 记录指向公网 IP；
-2. AAAA 为空，除非你明确配置了 IPv6；
-3. 抓包里出现 `GET /serverinfo`；
-4. 抓包里没有 `TLS ClientHello`；
-5. Sunshine TCP 和 UDP 端口已放通。
-
-## 命令
-
-WireGuard：
-
-```text
-install        安装 wireguard-tools 和 qrencode
-gen-keys       生成服务端和客户端密钥
-write-server   写 /etc/wireguard/<iface>.conf
-write-client   写 iOS 客户端配置
-firewall-open  临时放通 WireGuard UDP 端口
-up             启动 wg-quick
-down           停止 wg-quick
-restart        重启 wg-quick
-status         显示 WireGuard 状态；需要 root
-qr-client      输出 iOS 客户端配置二维码
-```
-
-Moonlight / Sunshine：
-
-```text
-dns-start        启动临时 split DNS
-dns-stop         停止临时 split DNS 并删除临时文件
-firewall-open    临时放通公网 Sunshine / Moonlight 端口
-firewall-close   删除临时公网 Sunshine / Moonlight 端口规则
-firewall-list    列出临时公网 Sunshine / Moonlight 端口规则
-vpn-firewall-open    放通 VPN/LAN DNS 和 Sunshine / Moonlight 端口
-vpn-firewall-close   删除 VPN/LAN DNS 和 Sunshine / Moonlight 端口规则
-vpn-firewall-list    列出 VPN/LAN DNS 和 Sunshine / Moonlight 端口规则
-check            显示配置、接口、监听、DNS 测试、nft 提示
-capture-add      抓 VPN 添加 / 配对阶段
-capture-public   抓公网阶段
-grep-add         检索添加 / 配对抓包
-grep-public      检索公网抓包
-env              打印解析后的环境变量
-```
-
-## 文件
-
-```text
-README.md
-README.zh-CN.md
-.env.example
-moonctl.sh
-wgctl.sh
+```bash
+sudo ./moonctl.sh firewall-close
+sudo ./moonctl.sh vpn-firewall-close
+sudo ./moonctl.sh dns-stop
+sudo ./wgctl.sh down
 ```
