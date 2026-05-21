@@ -145,6 +145,7 @@ Open temporary Sunshine / Moonlight ports:
 
 ```bash
 sudo ./moonctl.sh firewall-open
+sudo ./moonctl.sh firewall-list
 ```
 
 The helper opens:
@@ -153,6 +154,8 @@ The helper opens:
 TCP 47989, 47984, 48010
 UDP 47998-48010
 ```
+
+Rules are tagged with `NFT_COMMENT` so `firewall-list` and `firewall-close` can find them. Re-running `firewall-open` removes old tagged rules before adding fresh ones.
 
 Check local state:
 
@@ -212,6 +215,13 @@ sudo ./moonctl.sh capture-public
 ./moonctl.sh grep-public
 ```
 
+When testing is done, remove temporary runtime state:
+
+```bash
+sudo ./moonctl.sh firewall-close
+sudo ./moonctl.sh dns-stop
+```
+
 ## Troubleshooting
 
 ### VPN DNS Returns Nothing
@@ -233,6 +243,7 @@ Open the temporary public firewall rules again:
 
 ```bash
 sudo ./moonctl.sh firewall-open
+sudo ./moonctl.sh firewall-list
 ```
 
 ### Discovery Works But Streaming Fails
@@ -270,8 +281,10 @@ Moonlight / Sunshine:
 
 ```text
 dns-start        Start temporary split DNS
-dns-stop         Stop temporary split DNS
+dns-stop         Stop temporary split DNS and remove temporary files
 firewall-open    Open temporary Sunshine / Moonlight ports
+firewall-close   Remove temporary Sunshine / Moonlight ports
+firewall-list    List temporary Sunshine / Moonlight ports
 check            Show config, interfaces, listeners, DNS test, nft hints
 capture-add      Capture VPN add / pair phase
 capture-public   Capture public phase
@@ -290,4 +303,3 @@ moonctl.sh
 wgctl.sh
 docs/
 ```
-

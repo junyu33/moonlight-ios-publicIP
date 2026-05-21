@@ -17,14 +17,50 @@ fi
 : "${DNSMASQ_LOG:=/tmp/moon-dnsmasq.log}"
 : "${ADD_CAPTURE:=/tmp/moon-add.txt}"
 : "${PUBLIC_CAPTURE:=/tmp/moon-public.txt}"
+: "${NFT_COMMENT:=moonlight-ios-publicIP}"
 
 need_root_for() {
   case "${1:-}" in
-    dns-start|dns-stop|firewall-open|capture-add|capture-public)
+    dns-start|dns-stop|firewall-open|firewall-close|firewall-list|capture-add|capture-public)
       if [[ "${EUID}" -ne 0 ]]; then
         echo "Please run '$0 $1' as root, e.g. sudo $0 $1" >&2
         exit 1
       fi
+      ;;
+  esac
+}
+
+need_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Missing command: $1" >&2
+    exit 1
+  fi
+}
+
+need_cmds_for() {
+  case "${1:-}" in
+    dns-start)
+      need_cmd dnsmasq
+      need_cmd pkill
+      ;;
+    dns-stop)
+      need_cmd pkill
+      ;;
+    firewall-open|firewall-close|firewall-list)
+      need_cmd nft
+      ;;
+    check)
+      need_cmd ip
+      need_cmd ss
+      need_cmd dig
+      need_cmd nft
+      need_cmd grep
+      ;;
+    capture-add|capture-public)
+      need_cmd tcpdump
+      ;;
+    grep-add|grep-public)
+      need_cmd grep
       ;;
   esac
 }
@@ -65,16 +101,38 @@ dns_start() {
 dns_stop() {
   if [[ -f "$DNSMASQ_PID" ]]; then
     kill "$(cat "$DNSMASQ_PID")" 2>/dev/null || true
-    rm -f "$DNSMASQ_PID"
   fi
   pkill -f "$DNSMASQ_CONF" 2>/dev/null || true
+  rm -f "$DNSMASQ_PID" "$DNSMASQ_CONF" "$DNSMASQ_LOG"
   echo "dnsmasq stopped"
 }
 
+firewall_rule_handles() {
+  local line
+  nft -a list chain inet filter input 2>/dev/null | while IFS= read -r line; do
+    if [[ "$line" == *"$NFT_COMMENT"* && "$line" =~ handle[[:space:]]+([0-9]+) ]]; then
+      printf '%s\n' "${BASH_REMATCH[1]}"
+    fi
+  done
+}
+
+firewall_close() {
+  local handle
+  while IFS= read -r handle; do
+    nft delete rule inet filter input handle "$handle" 2>/dev/null || true
+  done < <(firewall_rule_handles)
+  echo "Temporary nftables rules removed from inet filter input"
+}
+
 firewall_open() {
-  nft add rule inet filter input iifname "$PUBLIC_IFACE" tcp dport { 47989, 47984, 48010 } accept
-  nft add rule inet filter input iifname "$PUBLIC_IFACE" udp dport 47998-48010 accept
+  firewall_close
+  nft add rule inet filter input iifname "$PUBLIC_IFACE" tcp dport { 47989, 47984, 48010 } accept comment "$NFT_COMMENT"
+  nft add rule inet filter input iifname "$PUBLIC_IFACE" udp dport 47998-48010 accept comment "$NFT_COMMENT"
   echo "Temporary nftables rules added on $PUBLIC_IFACE"
+}
+
+firewall_list() {
+  nft -a list chain inet filter input 2>/dev/null | grep -F "$NFT_COMMENT" || true
 }
 
 check() {
@@ -98,7 +156,7 @@ check() {
 
   echo
   echo "== nftables Moonlight/Sunshine hints =="
-  nft list ruleset 2>/dev/null | grep -nE '47989|47984|48010|47998|48010|'"$PUBLIC_IFACE" || true
+  nft list ruleset 2>/dev/null | grep -nE '47989|47984|48010|47998|47999|48000|'"$PUBLIC_IFACE" || true
 }
 
 capture_add() {
@@ -122,8 +180,10 @@ usage() {
   cat <<EOF
 Usage:
   $0 dns-start        Generate dnsmasq config and start split-DNS
-  $0 dns-stop         Stop temporary dnsmasq
+  $0 dns-stop         Stop temporary dnsmasq and remove temporary files
   $0 firewall-open    Add temporary nftables rules for Sunshine/Moonlight
+  $0 firewall-close   Remove temporary nftables rules for Sunshine/Moonlight
+  $0 firewall-list    List temporary nftables rules for Sunshine/Moonlight
   $0 check            Show config, listeners, DNS test, nft hints
   $0 capture-add      Capture VPN add/pair phase to ADD_CAPTURE
   $0 capture-public   Capture public phase to PUBLIC_CAPTURE
@@ -134,6 +194,7 @@ Usage:
 Examples:
   sudo $0 dns-start
   sudo $0 firewall-open
+  sudo $0 firewall-list
   $0 check
   sudo $0 capture-add
   $0 grep-add
@@ -142,18 +203,31 @@ EOF
 
 cmd="${1:-}"
 need_root_for "$cmd"
+need_cmds_for "$cmd"
 
 case "$cmd" in
   dns-start) dns_start ;;
   dns-stop) dns_stop ;;
   firewall-open) firewall_open ;;
+  firewall-close) firewall_close ;;
+  firewall-list) firewall_list ;;
   check) check ;;
   capture-add) capture_add ;;
   capture-public) capture_public ;;
   grep-add) grep_capture "$ADD_CAPTURE" ;;
   grep-public) grep_capture "$PUBLIC_CAPTURE" ;;
   env)
-    env | grep -E '^(MOON_HOST|LAN_IP|WG_IFACE|PUBLIC_IFACE|UPSTREAM_DNS|DNSMASQ_|ADD_CAPTURE|PUBLIC_CAPTURE)=' | sort
+    printf 'ADD_CAPTURE=%s\n' "$ADD_CAPTURE"
+    printf 'DNSMASQ_CONF=%s\n' "$DNSMASQ_CONF"
+    printf 'DNSMASQ_LOG=%s\n' "$DNSMASQ_LOG"
+    printf 'DNSMASQ_PID=%s\n' "$DNSMASQ_PID"
+    printf 'LAN_IP=%s\n' "$LAN_IP"
+    printf 'MOON_HOST=%s\n' "$MOON_HOST"
+    printf 'NFT_COMMENT=%s\n' "$NFT_COMMENT"
+    printf 'PUBLIC_CAPTURE=%s\n' "$PUBLIC_CAPTURE"
+    printf 'PUBLIC_IFACE=%s\n' "$PUBLIC_IFACE"
+    printf 'UPSTREAM_DNS=%s\n' "$UPSTREAM_DNS"
+    printf 'WG_IFACE=%s\n' "$WG_IFACE"
     ;;
   *) usage ;;
 esac

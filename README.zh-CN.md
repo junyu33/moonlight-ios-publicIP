@@ -145,6 +145,7 @@ dig AAAA <MOON_HOST> @<LAN_IP> +short
 
 ```bash
 sudo ./moonctl.sh firewall-open
+sudo ./moonctl.sh firewall-list
 ```
 
 脚本会放通：
@@ -153,6 +154,8 @@ sudo ./moonctl.sh firewall-open
 TCP 47989, 47984, 48010
 UDP 47998-48010
 ```
+
+规则会带上 `NFT_COMMENT` 标记，所以 `firewall-list` 和 `firewall-close` 可以找到它们。重复执行 `firewall-open` 会先删除旧的同标记规则，再添加新规则。
 
 检查本机状态：
 
@@ -212,6 +215,13 @@ sudo ./moonctl.sh capture-public
 ./moonctl.sh grep-public
 ```
 
+测试结束后清理临时状态：
+
+```bash
+sudo ./moonctl.sh firewall-close
+sudo ./moonctl.sh dns-stop
+```
+
 ## 常见问题
 
 ### VPN DNS 没结果
@@ -233,6 +243,7 @@ sudo tcpdump -ni <WG_IFACE> 'udp port 53 or tcp port 53'
 
 ```bash
 sudo ./moonctl.sh firewall-open
+sudo ./moonctl.sh firewall-list
 ```
 
 ### Discovery 正常但串流失败
@@ -270,8 +281,10 @@ Moonlight / Sunshine：
 
 ```text
 dns-start        启动临时 split DNS
-dns-stop         停止临时 split DNS
+dns-stop         停止临时 split DNS 并删除临时文件
 firewall-open    临时放通 Sunshine / Moonlight 端口
+firewall-close   删除临时 Sunshine / Moonlight 端口规则
+firewall-list    列出临时 Sunshine / Moonlight 端口规则
 check            显示配置、接口、监听、DNS 测试、nft 提示
 capture-add      抓 VPN 添加 / 配对阶段
 capture-public   抓公网阶段
@@ -290,4 +303,3 @@ moonctl.sh
 wgctl.sh
 docs/
 ```
-
