@@ -20,7 +20,7 @@ This repository provides helper scripts for WireGuard setup, temporary split DNS
 - `dnsmasq`, `nftables`, `tcpdump`, `dig`, `ss`
 - Optional: `wireguard-tools`, installed by `wgctl.sh install`
 
-Do not use a hostname that has HSTS, HTTPS-only redirects, Cloudflare proxying, URL forwarding, or unknown HTTPS history. If capture shows `TLS ClientHello` instead of `GET /serverinfo`, use a different hostname.
+**Do not use a hostname that has HSTS, HTTPS-only redirects, Cloudflare proxying, URL forwarding, or unknown HTTPS history.** If capture shows `TLS ClientHello` instead of `GET /serverinfo`, use a different hostname.
 
 ## Configure
 

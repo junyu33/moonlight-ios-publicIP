@@ -20,7 +20,7 @@ VPN / 内网添加配对阶段 -> <MOON_HOST> 解析到 <LAN_IP>
 - `dnsmasq`、`nftables`、`tcpdump`、`dig`、`ss`
 - 可选：`wireguard-tools`，可由 `wgctl.sh install` 安装
 
-不要使用有 HSTS、HTTPS-only 跳转、Cloudflare 代理、URL forwarding 或不确定 HTTPS 历史的域名。如果抓包看到 `TLS ClientHello` 而不是 `GET /serverinfo`，换一个域名。
+**不要使用有 HSTS、HTTPS-only 跳转、Cloudflare 代理、URL forwarding 或不确定 HTTPS 历史的域名。** 如果抓包看到 `TLS ClientHello` 而不是 `GET /serverinfo`，换一个域名。
 
 ## 配置
 
