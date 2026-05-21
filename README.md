@@ -41,6 +41,8 @@ PUBLIC_IFACE=enp3s0
 WG_ENDPOINT=moon.example.test:51820
 ```
 
+If `WG_ENDPOINT` points to an FRP server instead of the Sunshine/WireGuard host itself, configure an external UDP FRP proxy for `WG_PORT`, for example UDP `51820`, before starting the WireGuard test.
+
 Recommended WireGuard defaults:
 
 ```bash

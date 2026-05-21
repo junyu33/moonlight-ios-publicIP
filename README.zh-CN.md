@@ -41,6 +41,8 @@ PUBLIC_IFACE=enp3s0
 WG_ENDPOINT=moon.example.test:51820
 ```
 
+如果 `WG_ENDPOINT` 指向的是 FRP 公网入口，而不是 Sunshine/WireGuard 主机本身，需要先在本仓库之外配置 `WG_PORT` 的 UDP FRP 转发，例如 UDP `51820`。
+
 推荐的 WireGuard 默认值：
 
 ```bash
