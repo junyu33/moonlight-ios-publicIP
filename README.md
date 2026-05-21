@@ -134,6 +134,8 @@ Host: <MOON_HOST>:47989
 
 7. Use the saved host over the public Internet:
 
+If the host has already been added and paired, public use only needs `firewall-open`; WireGuard and split DNS are only needed for the initial add/pair phase.
+
 ```bash
 sudo ./moonctl.sh firewall-open
 sudo ./moonctl.sh firewall-list

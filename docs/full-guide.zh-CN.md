@@ -257,6 +257,8 @@ https://127.0.0.1:47990
 
 ## 公网使用
 
+如果 host 已经添加并配对过，公网日常使用只需要 `firewall-open`；WireGuard 和 split DNS 只在首次添加/配对阶段需要。
+
 在 iPhone 上：
 
 1. 关闭 WireGuard。

@@ -134,6 +134,8 @@ Host: <MOON_HOST>:47989
 
 7. 使用已保存的 host 走公网：
 
+如果 host 已经添加并配对过，公网日常使用只需要 `firewall-open`；WireGuard 和 split DNS 只在首次添加/配对阶段需要。
+
 ```bash
 sudo ./moonctl.sh firewall-open
 sudo ./moonctl.sh firewall-list

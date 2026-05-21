@@ -257,6 +257,8 @@ Do not expose the Sunshine Web UI port to the public Internet.
 
 ## Public Use
 
+If the host has already been added and paired, public use only needs `firewall-open`; WireGuard and split DNS are only needed for the initial add/pair phase.
+
 On iPhone:
 
 1. Turn off WireGuard.
