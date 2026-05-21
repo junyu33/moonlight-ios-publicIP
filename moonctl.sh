@@ -18,10 +18,12 @@ fi
 : "${ADD_CAPTURE:=/tmp/moon-add.txt}"
 : "${PUBLIC_CAPTURE:=/tmp/moon-public.txt}"
 : "${NFT_COMMENT:=moonlight-ios-publicIP}"
+: "${NFT_PUBLIC_COMMENT:=$NFT_COMMENT:public}"
+: "${NFT_VPN_COMMENT:=$NFT_COMMENT:vpn}"
 
 need_root_for() {
   case "${1:-}" in
-    dns-start|dns-stop|firewall-open|firewall-close|firewall-list|capture-add|capture-public)
+    dns-start|dns-stop|firewall-open|firewall-close|firewall-list|vpn-firewall-open|vpn-firewall-close|vpn-firewall-list|capture-add|capture-public)
       if [[ "${EUID}" -ne 0 ]]; then
         echo "Please run '$0 $1' as root, e.g. sudo $0 $1" >&2
         exit 1
@@ -46,7 +48,7 @@ need_cmds_for() {
     dns-stop)
       need_cmd pkill
       ;;
-    firewall-open|firewall-close|firewall-list)
+    firewall-open|firewall-close|firewall-list|vpn-firewall-open|vpn-firewall-close|vpn-firewall-list)
       need_cmd nft
       ;;
     check)
@@ -113,31 +115,55 @@ dns_stop() {
 }
 
 firewall_rule_handles() {
+  local comment="$1"
   local line
   nft -a list chain inet filter input 2>/dev/null | while IFS= read -r line; do
-    if [[ "$line" == *"$NFT_COMMENT"* && "$line" =~ handle[[:space:]]+([0-9]+) ]]; then
+    if [[ "$line" == *"comment \"$comment\""* && "$line" =~ handle[[:space:]]+([0-9]+) ]]; then
       printf '%s\n' "${BASH_REMATCH[1]}"
     fi
   done
 }
 
-firewall_close() {
+firewall_delete_by_comment() {
+  local comment="$1"
   local handle
   while IFS= read -r handle; do
     nft delete rule inet filter input handle "$handle" 2>/dev/null || true
-  done < <(firewall_rule_handles)
-  echo "Temporary nftables rules removed from inet filter input"
+  done < <(firewall_rule_handles "$comment")
+}
+
+firewall_close() {
+  firewall_delete_by_comment "$NFT_PUBLIC_COMMENT"
+  firewall_delete_by_comment "$NFT_COMMENT"
+  echo "Temporary public nftables rules removed from inet filter input"
 }
 
 firewall_open() {
   firewall_close
-  nft add rule inet filter input iifname "$PUBLIC_IFACE" tcp dport { 47989, 47984, 48010 } accept comment "$NFT_COMMENT"
-  nft add rule inet filter input iifname "$PUBLIC_IFACE" udp dport 47998-48010 accept comment "$NFT_COMMENT"
-  echo "Temporary nftables rules added on $PUBLIC_IFACE"
+  nft add rule inet filter input iifname "$PUBLIC_IFACE" tcp dport { 47989, 47984, 48010 } accept comment "$NFT_PUBLIC_COMMENT"
+  nft add rule inet filter input iifname "$PUBLIC_IFACE" udp dport 47998-48010 accept comment "$NFT_PUBLIC_COMMENT"
+  echo "Temporary public nftables rules added on $PUBLIC_IFACE"
 }
 
 firewall_list() {
-  nft -a list chain inet filter input 2>/dev/null | grep -F "$NFT_COMMENT" || true
+  nft -a list chain inet filter input 2>/dev/null | grep -F "$NFT_PUBLIC_COMMENT" || true
+}
+
+vpn_firewall_close() {
+  firewall_delete_by_comment "$NFT_VPN_COMMENT"
+  echo "Temporary VPN/LAN nftables rules removed from inet filter input"
+}
+
+vpn_firewall_open() {
+  vpn_firewall_close
+  nft add rule inet filter input iifname "$WG_IFACE" udp dport 53 accept comment "$NFT_VPN_COMMENT"
+  nft add rule inet filter input iifname "$WG_IFACE" tcp dport { 47989, 47984, 48010 } accept comment "$NFT_VPN_COMMENT"
+  nft add rule inet filter input iifname "$WG_IFACE" udp dport 47998-48010 accept comment "$NFT_VPN_COMMENT"
+  echo "Temporary VPN/LAN nftables rules added on $WG_IFACE"
+}
+
+vpn_firewall_list() {
+  nft -a list chain inet filter input 2>/dev/null | grep -F "$NFT_VPN_COMMENT" || true
 }
 
 check() {
@@ -161,7 +187,10 @@ check() {
 
   echo
   echo "== nftables Moonlight/Sunshine hints =="
-  nft list ruleset 2>/dev/null | grep -nE '47989|47984|48010|47998|47999|48000|'"$PUBLIC_IFACE" || true
+  nft list ruleset 2>/dev/null | grep -nE '47989|47984|48010|47998|47999|48000|udp dport 53' || true
+  nft list ruleset 2>/dev/null | grep -nF "$WG_IFACE" || true
+  nft list ruleset 2>/dev/null | grep -nF "$PUBLIC_IFACE" || true
+  nft list ruleset 2>/dev/null | grep -nF "$NFT_COMMENT" || true
 }
 
 capture_add() {
@@ -184,20 +213,24 @@ grep_capture() {
 usage() {
   cat <<EOF
 Usage:
-  $0 dns-start        Generate dnsmasq config and start split-DNS
-  $0 dns-stop         Stop temporary dnsmasq and remove temporary files
-  $0 firewall-open    Add temporary nftables rules for Sunshine/Moonlight
-  $0 firewall-close   Remove temporary nftables rules for Sunshine/Moonlight
-  $0 firewall-list    List temporary nftables rules for Sunshine/Moonlight
-  $0 check            Show config, listeners, DNS test, nft hints
-  $0 capture-add      Capture VPN add/pair phase to ADD_CAPTURE
-  $0 capture-public   Capture public phase to PUBLIC_CAPTURE
-  $0 grep-add         Grep ADD_CAPTURE for useful markers
-  $0 grep-public      Grep PUBLIC_CAPTURE for useful markers
-  $0 env              Print resolved environment
+  $0 dns-start            Generate dnsmasq config and start split-DNS
+  $0 dns-stop             Stop temporary dnsmasq and remove temporary files
+  $0 firewall-open        Add temporary public Sunshine/Moonlight rules
+  $0 firewall-close       Remove temporary public Sunshine/Moonlight rules
+  $0 firewall-list        List temporary public Sunshine/Moonlight rules
+  $0 vpn-firewall-open    Add temporary VPN/LAN rules for DNS and Sunshine/Moonlight
+  $0 vpn-firewall-close   Remove temporary VPN/LAN rules
+  $0 vpn-firewall-list    List temporary VPN/LAN rules
+  $0 check                Show config, listeners, DNS test, nft hints
+  $0 capture-add          Capture VPN add/pair phase to ADD_CAPTURE
+  $0 capture-public       Capture public phase to PUBLIC_CAPTURE
+  $0 grep-add             Grep ADD_CAPTURE for useful markers
+  $0 grep-public          Grep PUBLIC_CAPTURE for useful markers
+  $0 env                  Print resolved environment
 
 Examples:
   sudo $0 dns-start
+  sudo $0 vpn-firewall-open
   sudo $0 firewall-open
   sudo $0 firewall-list
   $0 check
@@ -216,6 +249,9 @@ case "$cmd" in
   firewall-open) firewall_open ;;
   firewall-close) firewall_close ;;
   firewall-list) firewall_list ;;
+  vpn-firewall-open) vpn_firewall_open ;;
+  vpn-firewall-close) vpn_firewall_close ;;
+  vpn-firewall-list) vpn_firewall_list ;;
   check) check ;;
   capture-add) capture_add ;;
   capture-public) capture_public ;;
@@ -229,6 +265,8 @@ case "$cmd" in
     printf 'LAN_IP=%s\n' "$LAN_IP"
     printf 'MOON_HOST=%s\n' "$MOON_HOST"
     printf 'NFT_COMMENT=%s\n' "$NFT_COMMENT"
+    printf 'NFT_PUBLIC_COMMENT=%s\n' "$NFT_PUBLIC_COMMENT"
+    printf 'NFT_VPN_COMMENT=%s\n' "$NFT_VPN_COMMENT"
     printf 'PUBLIC_CAPTURE=%s\n' "$PUBLIC_CAPTURE"
     printf 'PUBLIC_IFACE=%s\n' "$PUBLIC_IFACE"
     printf 'UPSTREAM_DNS=%s\n' "$UPSTREAM_DNS"

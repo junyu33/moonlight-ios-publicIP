@@ -128,6 +128,16 @@ Start temporary DNS for the add / pair phase:
 
 ```bash
 sudo ./moonctl.sh dns-start
+sudo ./moonctl.sh vpn-firewall-open
+sudo ./moonctl.sh vpn-firewall-list
+```
+
+The VPN/LAN firewall helper opens DNS on `WG_IFACE` plus Sunshine / Moonlight add, pair, and streaming ports:
+
+```text
+UDP 53
+TCP 47989, 47984, 48010
+UDP 47998-48010
 ```
 
 From the iPhone while WireGuard is enabled, check:
@@ -155,13 +165,14 @@ TCP 47989, 47984, 48010
 UDP 47998-48010
 ```
 
-All firewall rules created by `moonctl.sh` are tagged with `NFT_COMMENT` and can be removed with:
+Firewall rules created by `moonctl.sh` are tagged with comments derived from `NFT_COMMENT` and can be removed with:
 
 ```bash
 sudo ./moonctl.sh firewall-close
+sudo ./moonctl.sh vpn-firewall-close
 ```
 
-Re-running `firewall-open` removes old tagged rules before adding fresh ones.
+Re-running `firewall-open` or `vpn-firewall-open` removes old tagged rules for that phase before adding fresh ones.
 
 Check local state:
 
@@ -225,6 +236,7 @@ When testing is done, remove temporary runtime state:
 
 ```bash
 sudo ./moonctl.sh firewall-close
+sudo ./moonctl.sh vpn-firewall-close
 sudo ./moonctl.sh dns-stop
 ```
 
@@ -295,9 +307,12 @@ Moonlight / Sunshine:
 ```text
 dns-start        Start temporary split DNS
 dns-stop         Stop temporary split DNS and remove temporary files
-firewall-open    Open temporary Sunshine / Moonlight ports
-firewall-close   Remove temporary Sunshine / Moonlight ports
-firewall-list    List temporary Sunshine / Moonlight ports
+firewall-open    Open temporary public Sunshine / Moonlight ports
+firewall-close   Remove temporary public Sunshine / Moonlight ports
+firewall-list    List temporary public Sunshine / Moonlight ports
+vpn-firewall-open    Open VPN/LAN DNS and Sunshine / Moonlight ports
+vpn-firewall-close   Remove VPN/LAN DNS and Sunshine / Moonlight ports
+vpn-firewall-list    List VPN/LAN DNS and Sunshine / Moonlight ports
 check            Show config, interfaces, listeners, DNS test, nft hints
 capture-add      Capture VPN add / pair phase
 capture-public   Capture public phase

@@ -128,6 +128,16 @@ sudo ./wgctl.sh qr-client
 
 ```bash
 sudo ./moonctl.sh dns-start
+sudo ./moonctl.sh vpn-firewall-open
+sudo ./moonctl.sh vpn-firewall-list
+```
+
+VPN/LAN 防火墙辅助命令会在 `WG_IFACE` 上放通 DNS，以及 Sunshine / Moonlight 添加、配对和串流端口：
+
+```text
+UDP 53
+TCP 47989, 47984, 48010
+UDP 47998-48010
 ```
 
 iPhone 开启 WireGuard 后检查：
@@ -155,13 +165,14 @@ TCP 47989, 47984, 48010
 UDP 47998-48010
 ```
 
-所有由 `moonctl.sh` 创建的防火墙规则都会带上 `NFT_COMMENT` 标记，并且可以这样删除：
+所有由 `moonctl.sh` 创建的防火墙规则都会带上由 `NFT_COMMENT` 派生的标记，并且可以这样删除：
 
 ```bash
 sudo ./moonctl.sh firewall-close
+sudo ./moonctl.sh vpn-firewall-close
 ```
 
-重复执行 `firewall-open` 会先删除旧的同标记规则，再添加新规则。
+重复执行 `firewall-open` 或 `vpn-firewall-open` 会先删除对应阶段的旧标记规则，再添加新规则。
 
 检查本机状态：
 
@@ -225,6 +236,7 @@ sudo ./moonctl.sh capture-public
 
 ```bash
 sudo ./moonctl.sh firewall-close
+sudo ./moonctl.sh vpn-firewall-close
 sudo ./moonctl.sh dns-stop
 ```
 
@@ -295,9 +307,12 @@ Moonlight / Sunshine：
 ```text
 dns-start        启动临时 split DNS
 dns-stop         停止临时 split DNS 并删除临时文件
-firewall-open    临时放通 Sunshine / Moonlight 端口
-firewall-close   删除临时 Sunshine / Moonlight 端口规则
-firewall-list    列出临时 Sunshine / Moonlight 端口规则
+firewall-open    临时放通公网 Sunshine / Moonlight 端口
+firewall-close   删除临时公网 Sunshine / Moonlight 端口规则
+firewall-list    列出临时公网 Sunshine / Moonlight 端口规则
+vpn-firewall-open    放通 VPN/LAN DNS 和 Sunshine / Moonlight 端口
+vpn-firewall-close   删除 VPN/LAN DNS 和 Sunshine / Moonlight 端口规则
+vpn-firewall-list    列出 VPN/LAN DNS 和 Sunshine / Moonlight 端口规则
 check            显示配置、接口、监听、DNS 测试、nft 提示
 capture-add      抓 VPN 添加 / 配对阶段
 capture-public   抓公网阶段
