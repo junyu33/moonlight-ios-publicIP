@@ -139,7 +139,7 @@ Import the iOS client config:
 sudo ./wgctl.sh qr-client
 ```
 
-Then scan the QR code in the WireGuard iOS app.
+Then open the WireGuard app on iPhone, scan the QR code, import the tunnel, and enable it before the split DNS test.
 
 ## Split DNS
 

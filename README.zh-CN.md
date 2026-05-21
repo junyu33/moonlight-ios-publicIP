@@ -86,6 +86,8 @@ sudo ./wgctl.sh qr-client
 
 使用 `sudo ./wgctl.sh status`；WireGuard 状态需要 root 权限。
 
+iPhone 上打开 WireGuard App，扫码导入 tunnel，并在 split DNS 测试前开启它。
+
 5. 启动 split DNS 并放通 VPN/LAN 阶段防火墙：
 
 ```bash

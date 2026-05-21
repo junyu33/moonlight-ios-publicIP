@@ -86,6 +86,8 @@ sudo ./wgctl.sh qr-client
 
 Use `sudo ./wgctl.sh status`; WireGuard status requires root.
 
+On iPhone, open the WireGuard app, scan the QR code, import the tunnel, and enable it before the split DNS test.
+
 5. Start split DNS and open VPN/LAN phase firewall rules:
 
 ```bash

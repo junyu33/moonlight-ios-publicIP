@@ -139,7 +139,7 @@ sudo ./wgctl.sh status
 sudo ./wgctl.sh qr-client
 ```
 
-然后用 WireGuard iOS App 扫码导入。
+然后在 iPhone 上打开 WireGuard App，扫码导入 tunnel，并在 split DNS 测试前开启它。
 
 ## Split DNS
 
