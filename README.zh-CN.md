@@ -19,8 +19,22 @@ VPN / 内网添加配对阶段 -> <MOON_HOST> 解析到 <LAN_IP>
 - Moonlight iOS 官方客户端
 - 一个一次性 HTTP-clean 域名
 - 可配置公网 DNS A 记录
-- `dnsmasq`、`nftables`、`tcpdump`、`dig`、`ss`
+- 运行时工具：`dnsmasq`、`nftables` / `nft`、`tcpdump`、`dig`、`ss`
 - 可选：`wireguard-tools`，可由 `wgctl.sh install` 安装
+
+这些工具在最小系统中不一定默认安装。运行脚本前，请先安装并检查：
+
+```bash
+sudo ./depsctl.sh install
+./depsctl.sh check
+```
+
+手动安装示例：
+
+```bash
+sudo pacman -S --needed dnsmasq nftables tcpdump bind iproute2
+sudo apt-get install dnsmasq nftables tcpdump dnsutils iproute2
+```
 
 **不要使用有 HSTS、HTTPS-only 跳转、Cloudflare 代理、URL forwarding 或不确定 HTTPS 历史的域名。**
 

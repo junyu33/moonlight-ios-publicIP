@@ -17,8 +17,25 @@ This repository provides helper scripts for WireGuard setup, temporary split DNS
 - Official Moonlight iOS client
 - A disposable HTTP-clean hostname
 - Public DNS access for an A record
-- `dnsmasq`, `nftables`, `tcpdump`, `dig`, `ss`
+- Runtime tools: `dnsmasq`, `nftables` / `nft`, `tcpdump`, `dig`, `ss`
 - Optional: `wireguard-tools`, installed by `wgctl.sh install`
+
+These tools may not be installed by default on minimal systems. Install them with your distribution's package manager before running the scripts, or use:
+
+```bash
+sudo ./depsctl.sh install
+./depsctl.sh check
+```
+
+Manual examples:
+
+```bash
+# Arch
+sudo pacman -S --needed dnsmasq nftables tcpdump bind iproute2
+
+# Debian / Ubuntu
+sudo apt-get install dnsmasq nftables tcpdump dnsutils iproute2
+```
 
 **Do not use a hostname that has HSTS, HTTPS-only redirects, Cloudflare proxying, URL forwarding, or unknown HTTPS history.** If capture shows `TLS ClientHello` instead of `GET /serverinfo`, use a different hostname.
 
@@ -304,6 +321,13 @@ status         Show WireGuard status; requires root
 qr-client      Print iOS client config QR code
 ```
 
+Runtime dependencies:
+
+```text
+install   Install runtime tools for moonctl.sh
+check     Check runtime tools are available
+```
+
 Moonlight / Sunshine:
 
 ```text
@@ -329,6 +353,7 @@ env              Print resolved environment
 README.md
 README.zh-CN.md
 .env.example
+depsctl.sh
 moonctl.sh
 wgctl.sh
 docs/full-guide.md

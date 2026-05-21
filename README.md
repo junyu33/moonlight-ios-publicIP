@@ -19,8 +19,22 @@ For complete setup, troubleshooting, cleanup, and command reference details, rea
 - Official Moonlight iOS client
 - A disposable HTTP-clean hostname
 - Public DNS access for one A record
-- `dnsmasq`, `nftables`, `tcpdump`, `dig`, `ss`
+- Runtime tools: `dnsmasq`, `nftables` / `nft`, `tcpdump`, `dig`, `ss`
 - Optional: `wireguard-tools`, installed by `wgctl.sh install`
+
+These tools may not be installed by default on minimal systems. Install them before running the scripts:
+
+```bash
+sudo ./depsctl.sh install
+./depsctl.sh check
+```
+
+Manual examples:
+
+```bash
+sudo pacman -S --needed dnsmasq nftables tcpdump bind iproute2
+sudo apt-get install dnsmasq nftables tcpdump dnsutils iproute2
+```
 
 **Do not use a hostname that has HSTS, HTTPS-only redirects, Cloudflare proxying, URL forwarding, or unknown HTTPS history.**
 
