@@ -331,5 +331,4 @@ README.zh-CN.md
 .env.example
 moonctl.sh
 wgctl.sh
-docs/
 ```
