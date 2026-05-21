@@ -235,6 +235,26 @@ Pairing success should include:
 
 Do not delete the saved Moonlight host after pairing.
 
+### Remote pairing note
+
+If you are not physically in front of the Sunshine host, you may need access to the Sunshine Web UI to enter the pairing PIN shown by Moonlight.
+
+Use an SSH local port forward instead of exposing the Web UI publicly:
+
+```bash
+ssh -L 47990:127.0.0.1:47990 user@sunshine-host
+```
+
+Then open on your local machine:
+
+```text
+https://127.0.0.1:47990
+```
+
+Enter the PIN there when Moonlight asks for pairing.
+
+Do not expose the Sunshine Web UI port to the public Internet.
+
 ## Public Use
 
 On iPhone:

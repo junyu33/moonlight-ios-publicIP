@@ -235,6 +235,26 @@ Host: <MOON_HOST>:47989
 
 配对后不要删除 Moonlight 中已保存的 host。
 
+### 远程配对提示
+
+如果你不在 Sunshine 主机前，Moonlight 显示配对 PIN 后，可能需要进入 Sunshine Web UI 输入这个 PIN。
+
+建议用 SSH 本地端口转发，不要把 Web UI 暴露到公网：
+
+```bash
+ssh -L 47990:127.0.0.1:47990 user@sunshine-host
+```
+
+然后在本地浏览器打开：
+
+```text
+https://127.0.0.1:47990
+```
+
+在 Sunshine Web UI 中输入 Moonlight 显示的 PIN。
+
+不要把 Sunshine Web UI 端口直接暴露到公网。
+
 ## 公网使用
 
 在 iPhone 上：

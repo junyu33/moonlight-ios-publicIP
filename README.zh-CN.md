@@ -113,6 +113,8 @@ sudo ./moonctl.sh capture-add
 
 iPhone：开启 WireGuard，打开 Moonlight，添加 `<MOON_HOST>`，配对，并进入一次 Desktop。
 
+如果需要远程输入配对 PIN，请用 SSH 本地端口转发访问 Sunshine Web UI；见[远程配对提示](docs/full-guide.zh-CN.md#远程配对提示)。
+
 另一个 shell：
 
 ```bash
