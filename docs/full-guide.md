@@ -381,3 +381,7 @@ wgctl.sh
 docs/full-guide.md
 docs/full-guide.zh-CN.md
 ```
+
+## License
+
+MIT. See [../LICENSE](../LICENSE).

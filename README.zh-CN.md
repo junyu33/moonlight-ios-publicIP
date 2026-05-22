@@ -151,3 +151,7 @@ sudo ./moonctl.sh vpn-firewall-close
 sudo ./moonctl.sh dns-stop
 sudo ./wgctl.sh down
 ```
+
+## License
+
+MIT。见 [LICENSE](LICENSE)。
