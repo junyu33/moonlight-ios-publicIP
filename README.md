@@ -57,13 +57,28 @@ In shim mode, avoid using `moonctl.sh firewall-open` as the public-mode authorit
 - A disposable HTTP-clean hostname
 - Public DNS access for one A record
 - Runtime tools: `dnsmasq`, `nftables` / `nft`, `tcpdump`, `dig`, `ss`
+- HTTPS shim tools: `haproxy`, `openssl`, `systemctl`, `sudo`, `awk`, `pkill`, `curl`
 - Optional: `wireguard-tools`, installed by `wgctl.sh install`
 
-These tools may not be installed by default on minimal systems. Install them before running the scripts:
+These tools may not be installed by default on minimal systems. Install the split-DNS/plain tools before running the top-level scripts:
 
 ```bash
 sudo ./depsctl.sh install
 ./depsctl.sh check
+```
+
+For hostname-HTTPS-shim mode:
+
+```bash
+sudo ./depsctl.sh install-shim
+./depsctl.sh check-shim
+```
+
+To install both sets:
+
+```bash
+sudo ./depsctl.sh install-all
+./depsctl.sh check-all
 ```
 
 Manual examples:
@@ -71,6 +86,8 @@ Manual examples:
 ```bash
 sudo pacman -S --needed dnsmasq nftables tcpdump bind iproute2
 sudo apt-get install dnsmasq nftables tcpdump dnsutils iproute2
+sudo pacman -S --needed haproxy openssl procps-ng sudo gawk grep curl
+sudo apt-get install haproxy openssl procps sudo gawk grep curl
 ```
 
 **Do not use a hostname that has HSTS, HTTPS-only redirects, Cloudflare proxying, URL forwarding, or unknown HTTPS history.**

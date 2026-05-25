@@ -57,13 +57,28 @@ Mode B: hostname-HTTPS-shim mode
 - 一个一次性 HTTP-clean 域名
 - 可配置公网 DNS A 记录
 - 运行时工具：`dnsmasq`、`nftables` / `nft`、`tcpdump`、`dig`、`ss`
+- HTTPS shim 工具：`haproxy`、`openssl`、`systemctl`、`sudo`、`awk`、`pkill`、`curl`
 - 可选：`wireguard-tools`，可由 `wgctl.sh install` 安装
 
-这些工具在最小系统中不一定默认安装。运行脚本前，请先安装并检查：
+这些工具在最小系统中不一定默认安装。运行顶层脚本前，请先安装并检查 split-DNS/plain 工具：
 
 ```bash
 sudo ./depsctl.sh install
 ./depsctl.sh check
+```
+
+hostname-HTTPS-shim mode 需要额外工具：
+
+```bash
+sudo ./depsctl.sh install-shim
+./depsctl.sh check-shim
+```
+
+如果两个 mode 都要准备：
+
+```bash
+sudo ./depsctl.sh install-all
+./depsctl.sh check-all
 ```
 
 手动安装示例：
@@ -71,6 +86,8 @@ sudo ./depsctl.sh install
 ```bash
 sudo pacman -S --needed dnsmasq nftables tcpdump bind iproute2
 sudo apt-get install dnsmasq nftables tcpdump dnsutils iproute2
+sudo pacman -S --needed haproxy openssl procps-ng sudo gawk grep curl
+sudo apt-get install haproxy openssl procps sudo gawk grep curl
 ```
 
 **不要使用有 HSTS、HTTPS-only 跳转、Cloudflare 代理、URL forwarding 或不确定 HTTPS 历史的域名。**

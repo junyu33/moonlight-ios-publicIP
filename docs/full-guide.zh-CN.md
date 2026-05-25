@@ -18,13 +18,28 @@ VPN / 内网添加配对阶段 -> <MOON_HOST> 解析到 <LAN_IP>
 - 一个一次性 HTTP-clean 域名
 - 可配置公网 DNS A 记录
 - 运行时工具：`dnsmasq`、`nftables` / `nft`、`tcpdump`、`dig`、`ss`
+- HTTPS shim 工具：`haproxy`、`openssl`、`systemctl`、`sudo`、`awk`、`pkill`、`curl`
 - 可选：`wireguard-tools`，可由 `wgctl.sh install` 安装
 
-这些工具在最小系统中不一定默认安装。运行脚本前，请用发行版包管理器安装，或使用：
+这些工具在最小系统中不一定默认安装。运行顶层脚本前，请用发行版包管理器安装 split-DNS/plain 工具，或使用：
 
 ```bash
 sudo ./depsctl.sh install
 ./depsctl.sh check
+```
+
+hostname-HTTPS-shim mode 需要额外工具：
+
+```bash
+sudo ./depsctl.sh install-shim
+./depsctl.sh check-shim
+```
+
+如果两个 mode 都要准备：
+
+```bash
+sudo ./depsctl.sh install-all
+./depsctl.sh check-all
 ```
 
 手动安装示例：
@@ -32,9 +47,11 @@ sudo ./depsctl.sh install
 ```bash
 # Arch
 sudo pacman -S --needed dnsmasq nftables tcpdump bind iproute2
+sudo pacman -S --needed haproxy openssl procps-ng sudo gawk grep curl
 
 # Debian / Ubuntu
 sudo apt-get install dnsmasq nftables tcpdump dnsutils iproute2
+sudo apt-get install haproxy openssl procps sudo gawk grep curl
 ```
 
 **不要使用有 HSTS、HTTPS-only 跳转、Cloudflare 代理、URL forwarding 或不确定 HTTPS 历史的域名。** 如果抓包看到 `TLS ClientHello` 而不是 `GET /serverinfo`，可以为 split-DNS/plain mode 换一个域名，或者把公网阶段切到 [hostname HTTPS shim](hostname-https-shim.zh-CN.md)。
@@ -346,8 +363,12 @@ qr-client      输出 iOS 客户端配置二维码
 运行时依赖：
 
 ```text
-install   安装 moonctl.sh 所需运行时工具
-check     检查运行时工具是否可用
+install        安装 moonctl.sh 所需 split-DNS/plain 运行时工具
+install-shim   安装 hostname HTTPS shim 运行时工具
+install-all    安装两组运行时工具
+check          检查 split-DNS/plain 运行时工具
+check-shim     检查 hostname HTTPS shim 运行时工具
+check-all      检查两组运行时工具
 ```
 
 Moonlight / Sunshine：

@@ -18,13 +18,28 @@ This repository provides helper scripts for WireGuard setup, temporary split DNS
 - A disposable HTTP-clean hostname
 - Public DNS access for an A record
 - Runtime tools: `dnsmasq`, `nftables` / `nft`, `tcpdump`, `dig`, `ss`
+- HTTPS shim tools: `haproxy`, `openssl`, `systemctl`, `sudo`, `awk`, `pkill`, `curl`
 - Optional: `wireguard-tools`, installed by `wgctl.sh install`
 
-These tools may not be installed by default on minimal systems. Install them with your distribution's package manager before running the scripts, or use:
+These tools may not be installed by default on minimal systems. Install the split-DNS/plain tools with your distribution's package manager before running the top-level scripts, or use:
 
 ```bash
 sudo ./depsctl.sh install
 ./depsctl.sh check
+```
+
+For hostname-HTTPS-shim mode:
+
+```bash
+sudo ./depsctl.sh install-shim
+./depsctl.sh check-shim
+```
+
+To install both sets:
+
+```bash
+sudo ./depsctl.sh install-all
+./depsctl.sh check-all
 ```
 
 Manual examples:
@@ -32,9 +47,11 @@ Manual examples:
 ```bash
 # Arch
 sudo pacman -S --needed dnsmasq nftables tcpdump bind iproute2
+sudo pacman -S --needed haproxy openssl procps-ng sudo gawk grep curl
 
 # Debian / Ubuntu
 sudo apt-get install dnsmasq nftables tcpdump dnsutils iproute2
+sudo apt-get install haproxy openssl procps sudo gawk grep curl
 ```
 
 **Do not use a hostname that has HSTS, HTTPS-only redirects, Cloudflare proxying, URL forwarding, or unknown HTTPS history.** If capture shows `TLS ClientHello` instead of `GET /serverinfo`, either use a different hostname for split-DNS/plain mode or switch the public phase to [Hostname HTTPS shim](hostname-https-shim.md).
@@ -346,8 +363,12 @@ qr-client      Print iOS client config QR code
 Runtime dependencies:
 
 ```text
-install   Install runtime tools for moonctl.sh
-check     Check runtime tools are available
+install        Install split-DNS/plain runtime tools for moonctl.sh
+install-shim   Install hostname HTTPS shim runtime tools
+install-all    Install both runtime tool sets
+check          Check split-DNS/plain runtime tools
+check-shim     Check hostname HTTPS shim runtime tools
+check-all      Check both runtime tool sets
 ```
 
 Moonlight / Sunshine:
