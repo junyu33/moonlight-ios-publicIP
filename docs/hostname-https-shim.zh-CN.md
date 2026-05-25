@@ -1,8 +1,59 @@
 # 持久化 hostname HTTPS shim
 
-[中文 TLDR README](../README.zh-CN.md) | [完整手册](full-guide.zh-CN.md)
+[中文 README](../README.zh-CN.md) | [完整手册](full-guide.zh-CN.md)
 
 本文把已经验证成功的实验态整理成可重复安装的持久化配置。
+
+## TLDR
+
+仅在 hostname-HTTPS-shim mode 下使用。请把示例域名、公网 IP 和证书路径替换为你自己的值。
+
+在仓库外配置 DNS：
+
+```text
+<MOON_HOST> -> <PUBLIC_IPV4>
+Proxy/CDN: off
+AAAA: none
+```
+
+Sunshine 主机上执行：
+
+```bash
+sed -i 's/^MOON_HOST=.*/MOON_HOST=moon.example.test/' .env
+grep -q '^LE_COMBINED_PEM=' .env \
+  && sed -i 's|^LE_COMBINED_PEM=.*|LE_COMBINED_PEM=/etc/haproxy/certs/moon.example.test.pem|' .env \
+  || printf '\nLE_COMBINED_PEM=/etc/haproxy/certs/moon.example.test.pem\n' >> .env
+source .env
+
+./https-shim/install-https-shim.sh
+sudo /usr/local/sbin/moonlight-https-shim-nft status
+
+sudo ./wgctl.sh up
+sudo ./moonctl.sh dns-start
+dig @"$LAN_IP" A "$MOON_HOST" +short
+
+sudo ./https-shim/vpn.sh up
+sudo ./https-shim/vpn.sh status
+```
+
+iPhone 上：
+
+```text
+开启 WireGuard
+在官方 Moonlight 中添加 MOON_HOST
+配对
+进入一次 Desktop
+关闭 WireGuard
+刷新已保存的 host
+通过公网再次进入 Desktop
+```
+
+确认公网串流成功后：
+
+```bash
+sudo ./https-shim/vpn.sh down
+sudo /usr/local/sbin/moonlight-https-shim-nft status || sudo systemctl restart moonlight-https-shim-nft.service
+```
 
 ## 和顶层脚本的关系
 

@@ -1,8 +1,59 @@
 # Persistent Hostname HTTPS Shim
 
-[TLDR README](../README.md) | [Full guide](full-guide.md)
+[README](../README.md) | [Full guide](full-guide.md)
 
 This document turns the verified hostname HTTPS workaround into a repeatable persistent setup.
+
+## TLDR
+
+Use this only for hostname-HTTPS-shim mode. Replace the example hostname, public IP, and certificate path with your own values.
+
+DNS outside this repository:
+
+```text
+<MOON_HOST> -> <PUBLIC_IPV4>
+Proxy/CDN: off
+AAAA: none
+```
+
+Commands on the Sunshine host:
+
+```bash
+sed -i 's/^MOON_HOST=.*/MOON_HOST=moon.example.test/' .env
+grep -q '^LE_COMBINED_PEM=' .env \
+  && sed -i 's|^LE_COMBINED_PEM=.*|LE_COMBINED_PEM=/etc/haproxy/certs/moon.example.test.pem|' .env \
+  || printf '\nLE_COMBINED_PEM=/etc/haproxy/certs/moon.example.test.pem\n' >> .env
+source .env
+
+./https-shim/install-https-shim.sh
+sudo /usr/local/sbin/moonlight-https-shim-nft status
+
+sudo ./wgctl.sh up
+sudo ./moonctl.sh dns-start
+dig @"$LAN_IP" A "$MOON_HOST" +short
+
+sudo ./https-shim/vpn.sh up
+sudo ./https-shim/vpn.sh status
+```
+
+On iPhone:
+
+```text
+Enable WireGuard
+Add MOON_HOST in official Moonlight
+Pair
+Enter Desktop once
+Disable WireGuard
+Refresh the saved host
+Enter Desktop over public Internet
+```
+
+After public streaming works:
+
+```bash
+sudo ./https-shim/vpn.sh down
+sudo /usr/local/sbin/moonlight-https-shim-nft status || sudo systemctl restart moonlight-https-shim-nft.service
+```
 
 ## Relationship To The Top-Level Scripts
 
