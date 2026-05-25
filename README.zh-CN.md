@@ -13,6 +13,8 @@ VPN / 内网添加配对阶段 -> <MOON_HOST> 解析到 <LAN_IP>
 
 完整设置、排查、清理和命令参考见 [docs/full-guide.zh-CN.md](docs/full-guide.zh-CN.md)。
 
+如果抓包显示 hostname 相关的 HTTPS/TLS 行为，可以考虑 `https-shim` 分支。
+
 ## 依赖
 
 - Linux 主机，Sunshine 已安装并运行

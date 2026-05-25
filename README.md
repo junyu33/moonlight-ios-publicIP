@@ -13,6 +13,8 @@ Use over public Internet   -> <MOON_HOST> resolves to the public IP
 
 For complete setup, troubleshooting, cleanup, and command reference details, read [docs/full-guide.md](docs/full-guide.md).
 
+If your capture shows hostname-related HTTPS/TLS behavior, consider the `https-shim` branch.
+
 ## Requirements
 
 - Linux host with Sunshine installed and running
