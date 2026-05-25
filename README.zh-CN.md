@@ -1,6 +1,6 @@
 # Moonlight iOS + Sunshine Split DNS
 
-[English README](README.md) | [完整手册](docs/full-guide.zh-CN.md)
+[English README](README.md) | [完整手册](docs/full-guide.zh-CN.md) | [hostname HTTPS shim](docs/hostname-https-shim.zh-CN.md)
 
 这个仓库提供最小辅助脚本，用官方 Moonlight iOS 客户端和 Sunshine 通过一个一次性域名完成添加、配对和公网使用。
 
@@ -12,6 +12,8 @@ VPN / 内网添加配对阶段 -> <MOON_HOST> 解析到 <LAN_IP>
 ```
 
 完整设置、排查、清理和命令参考见 [docs/full-guide.zh-CN.md](docs/full-guide.zh-CN.md)。
+
+如果 Moonlight/VoidLink iOS 在 hostname 模式下对 `<MOON_HOST>:47989` 发送 TLS ClientHello，请看 [hostname HTTPS shim](docs/hostname-https-shim.zh-CN.md)。可工作的结构是不对称的：只代理 `47989` 并使用公网证书，同时让 Sunshine 原生 `47984` 直接呈现同一个 hostname-valid 公网证书，以保留它的 mTLS 端点。
 
 ## 依赖
 
