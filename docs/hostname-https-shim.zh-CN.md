@@ -1,6 +1,45 @@
 # 持久化 hostname HTTPS shim
 
+[English](hostname-https-shim.md) | [中文 TLDR README](../README.zh-CN.md)
+
 本文把已经验证成功的实验态整理成可重复安装的持久化配置。
+
+## 和顶层脚本的关系
+
+顶层脚本是 split-DNS / VPN 添加配对方案的基础设施：
+
+```text
+wgctl.sh      管 WireGuard 配置和 tunnel 生命周期
+moonctl.sh    管 split DNS、VPN/public 防火墙辅助规则和抓包
+depsctl.sh    管运行时依赖检查和安装
+```
+
+`https-shim/` 脚本是 Moonlight/VoidLink iOS 在 hostname 模式下对 `<MOON_HOST>:47989` 发送 TLS ClientHello 时使用的额外 public-mode backend：
+
+```text
+https-shim/install-https-shim.sh
+  安装 47989 HTTPS shim，让 Sunshine 47984 呈现 hostname-valid 证书，
+  并持久化 HAProxy/nft/systemd 状态
+
+https-shim/uninstall-https-shim.sh
+  卸载 shim，必要时恢复 Sunshine 原始 cert/key
+```
+
+本仓库可以按两个 mode 使用：
+
+```text
+Mode A: split-DNS/plain mode
+  使用 wgctl.sh + moonctl.sh。
+  不启用 HTTPS shim。
+  适合客户端对 hostname:47989 发送 GET /serverinfo 的情况。
+
+Mode B: hostname-HTTPS-shim mode
+  仍可用 wgctl.sh 做 VPN 测试，也可用 moonctl.sh 做 DNS/抓包诊断。
+  公网 47989/47984/串流防火墙和 redirect 状态由 https-shim/ 管。
+  适合客户端对 hostname:47989 发送 TLS ClientHello 的情况。
+```
+
+在 shim mode 下，不建议再让 `moonctl.sh firewall-open` 主导公网阶段。它和 `moonlight-https-shim-nft.service` 持久化安装的 nft 规则有重叠；plain mode 仍然可以使用 `moonctl.sh firewall-open`。
 
 ## 工作结构
 
@@ -18,7 +57,7 @@
 
 48010 and UDP 47998-48010:
   native Sunshine streaming/control ports
-````
+```
 
 关键点：不要反代 `47984`。Sunshine 的 `47984` 是 mTLS 端点，会要求 Moonlight/VoidLink 的客户端证书。HAProxy 没有 iOS 客户端私钥，所以不能替客户端连接 Sunshine 的 `47984`。
 
@@ -56,7 +95,7 @@ sudo chmod 600 /etc/haproxy/certs/junyu33.pem
 ## 安装
 
 ```bash
-./scripts/install-https-shim.sh
+./https-shim/install-https-shim.sh
 ```
 
 安装脚本会：
@@ -109,13 +148,13 @@ server-public-ip:48000 -> phone-public-ip:...
 只移除 HAProxy/nft shim，不恢复 Sunshine 证书：
 
 ```bash
-./scripts/uninstall-https-shim.sh
+./https-shim/uninstall-https-shim.sh
 ```
 
 同时恢复 Sunshine 原始 credentials：
 
 ```bash
-./scripts/uninstall-https-shim.sh /home/junyu33/.config/sunshine/credentials.bak.YYYYMMDD-HHMMSS
+./https-shim/uninstall-https-shim.sh /home/junyu33/.config/sunshine/credentials.bak.YYYYMMDD-HHMMSS
 ```
 
 ## 已知边界
@@ -124,5 +163,3 @@ server-public-ip:48000 -> phone-public-ip:...
 * 不能把 `47984` 转到 Sunshine HTTP `47989`，即使 `pairchallenge` 可能返回 200，后续 `/applist` 也会走错后端。
 * 只代理 `47989` 但 Sunshine `47984` 仍使用自签证书时，hostname 模式下 iOS 会继续 SSL error。
 * 成功结构是不对称的：`47989` 代理，`47984` 原生直连。
-  EOF
-

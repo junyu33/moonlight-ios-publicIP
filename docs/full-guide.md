@@ -37,7 +37,7 @@ sudo pacman -S --needed dnsmasq nftables tcpdump bind iproute2
 sudo apt-get install dnsmasq nftables tcpdump dnsutils iproute2
 ```
 
-**Do not use a hostname that has HSTS, HTTPS-only redirects, Cloudflare proxying, URL forwarding, or unknown HTTPS history.** If capture shows `TLS ClientHello` instead of `GET /serverinfo`, use a different hostname.
+**Do not use a hostname that has HSTS, HTTPS-only redirects, Cloudflare proxying, URL forwarding, or unknown HTTPS history.** If capture shows `TLS ClientHello` instead of `GET /serverinfo`, either use a different hostname for split-DNS/plain mode or switch the public phase to [Hostname HTTPS shim](hostname-https-shim.md).
 
 ## Configure
 
@@ -301,7 +301,7 @@ sudo ./moonctl.sh dns-start
 
 ### Capture Shows TLS ClientHello
 
-Use a different HTTP-clean hostname.
+Use a different HTTP-clean hostname for split-DNS/plain mode, or switch the public phase to [Hostname HTTPS shim](hostname-https-shim.md). In shim mode, `wgctl.sh` remains reusable and `moonctl.sh` remains useful for DNS/capture diagnostics, but public firewall/redirect state is owned by `https-shim/install-https-shim.sh` and `moonlight-https-shim-nft.service`.
 
 ### Public SYN Arrives But No SYN-ACK
 
@@ -380,6 +380,10 @@ moonctl.sh
 wgctl.sh
 docs/full-guide.md
 docs/full-guide.zh-CN.md
+docs/hostname-https-shim.md
+docs/hostname-https-shim.zh-CN.md
+https-shim/install-https-shim.sh
+https-shim/uninstall-https-shim.sh
 ```
 
 ## License

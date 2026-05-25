@@ -1,6 +1,6 @@
 # Moonlight iOS + Sunshine Split DNS
 
-[中文 README](README.zh-CN.md) | [Full guide](docs/full-guide.md) | [Hostname HTTPS shim](docs/hostname-https-shim.zh-CN.md)
+[中文 README](README.zh-CN.md) | [Full guide](docs/full-guide.md) | [Hostname HTTPS shim](docs/hostname-https-shim.md)
 
 Minimal helper scripts for using one disposable hostname with the official Moonlight iOS client and Sunshine.
 
@@ -13,7 +13,42 @@ Use over public Internet   -> <MOON_HOST> resolves to the public IP
 
 For complete setup, troubleshooting, cleanup, and command reference details, read [docs/full-guide.md](docs/full-guide.md).
 
-If Moonlight/VoidLink iOS sends TLS ClientHello to `<MOON_HOST>:47989` in hostname mode, see [Hostname HTTPS shim](docs/hostname-https-shim.zh-CN.md). The working shape is asymmetric: proxy only `47989` with a public certificate, and make Sunshine's native `47984` present the same hostname-valid public certificate so its mTLS endpoint remains intact.
+If Moonlight/VoidLink iOS sends TLS ClientHello to `<MOON_HOST>:47989` in hostname mode, use [Hostname HTTPS shim](docs/hostname-https-shim.md) ([中文](docs/hostname-https-shim.zh-CN.md)).
+
+The top-level scripts remain the base split-DNS / VPN add-and-pair toolkit:
+
+```text
+wgctl.sh      WireGuard setup and tunnel lifecycle
+moonctl.sh    split DNS, VPN/public firewall helpers, and packet capture
+depsctl.sh    runtime dependency checks and installation
+```
+
+The `https-shim/` scripts are an extra public-mode backend:
+
+```text
+https-shim/install-https-shim.sh
+  installs the 47989 HTTPS shim, makes Sunshine 47984 present a hostname-valid cert,
+  and persists HAProxy/nft/systemd state
+
+https-shim/uninstall-https-shim.sh
+  removes the shim and can optionally restore Sunshine's original cert/key
+```
+
+Use the repository in one of two modes:
+
+```text
+Mode A: split-DNS/plain mode
+  Use wgctl.sh + moonctl.sh.
+  Do not enable the HTTPS shim.
+  This is for clients that send GET /serverinfo to hostname:47989.
+
+Mode B: hostname-HTTPS-shim mode
+  You may still use wgctl.sh for VPN testing and moonctl.sh for DNS/capture diagnostics.
+  Public 47989/47984/streaming firewall and redirect state is owned by https-shim/.
+  This is for clients that send TLS ClientHello to hostname:47989.
+```
+
+In shim mode, avoid using `moonctl.sh firewall-open` as the public-mode authority because it overlaps with the persistent nft rules installed by `moonlight-https-shim-nft.service`.
 
 ## Requirements
 

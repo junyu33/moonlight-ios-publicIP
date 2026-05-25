@@ -37,7 +37,7 @@ sudo pacman -S --needed dnsmasq nftables tcpdump bind iproute2
 sudo apt-get install dnsmasq nftables tcpdump dnsutils iproute2
 ```
 
-**不要使用有 HSTS、HTTPS-only 跳转、Cloudflare 代理、URL forwarding 或不确定 HTTPS 历史的域名。** 如果抓包看到 `TLS ClientHello` 而不是 `GET /serverinfo`，换一个域名。
+**不要使用有 HSTS、HTTPS-only 跳转、Cloudflare 代理、URL forwarding 或不确定 HTTPS 历史的域名。** 如果抓包看到 `TLS ClientHello` 而不是 `GET /serverinfo`，可以为 split-DNS/plain mode 换一个域名，或者把公网阶段切到 [hostname HTTPS shim](hostname-https-shim.zh-CN.md)。
 
 ## 配置
 
@@ -301,7 +301,7 @@ sudo ./moonctl.sh dns-start
 
 ### 抓包显示 TLS ClientHello
 
-换一个 HTTP-clean 域名。
+为 split-DNS/plain mode 换一个 HTTP-clean 域名，或者把公网阶段切到 [hostname HTTPS shim](hostname-https-shim.zh-CN.md)。在 shim mode 下，`wgctl.sh` 仍可复用，`moonctl.sh` 仍可用于 DNS/抓包诊断，但公网防火墙和 redirect 状态由 `https-shim/install-https-shim.sh` 和 `moonlight-https-shim-nft.service` 管。
 
 ### 公网 SYN 到了但没有 SYN-ACK
 
@@ -380,6 +380,10 @@ moonctl.sh
 wgctl.sh
 docs/full-guide.md
 docs/full-guide.zh-CN.md
+docs/hostname-https-shim.md
+docs/hostname-https-shim.zh-CN.md
+https-shim/install-https-shim.sh
+https-shim/uninstall-https-shim.sh
 ```
 
 ## License

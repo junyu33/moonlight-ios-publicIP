@@ -13,7 +13,42 @@ VPN / 内网添加配对阶段 -> <MOON_HOST> 解析到 <LAN_IP>
 
 完整设置、排查、清理和命令参考见 [docs/full-guide.zh-CN.md](docs/full-guide.zh-CN.md)。
 
-如果 Moonlight/VoidLink iOS 在 hostname 模式下对 `<MOON_HOST>:47989` 发送 TLS ClientHello，请看 [hostname HTTPS shim](docs/hostname-https-shim.zh-CN.md)。可工作的结构是不对称的：只代理 `47989` 并使用公网证书，同时让 Sunshine 原生 `47984` 直接呈现同一个 hostname-valid 公网证书，以保留它的 mTLS 端点。
+如果 Moonlight/VoidLink iOS 在 hostname 模式下对 `<MOON_HOST>:47989` 发送 TLS ClientHello，请使用 [hostname HTTPS shim](docs/hostname-https-shim.zh-CN.md)（[English](docs/hostname-https-shim.md)）。
+
+顶层脚本是 split-DNS / VPN 添加配对方案的基础设施：
+
+```text
+wgctl.sh      管 WireGuard 配置和 tunnel 生命周期
+moonctl.sh    管 split DNS、VPN/public 防火墙辅助规则和抓包
+depsctl.sh    管运行时依赖检查和安装
+```
+
+`https-shim/` 脚本是额外的 public-mode backend：
+
+```text
+https-shim/install-https-shim.sh
+  安装 47989 HTTPS shim，让 Sunshine 47984 呈现 hostname-valid 证书，
+  并持久化 HAProxy/nft/systemd 状态
+
+https-shim/uninstall-https-shim.sh
+  卸载 shim，必要时恢复 Sunshine 原始 cert/key
+```
+
+本仓库可以按两个 mode 使用：
+
+```text
+Mode A: split-DNS/plain mode
+  使用 wgctl.sh + moonctl.sh。
+  不启用 HTTPS shim。
+  适合客户端对 hostname:47989 发送 GET /serverinfo 的情况。
+
+Mode B: hostname-HTTPS-shim mode
+  仍可用 wgctl.sh 做 VPN 测试，也可用 moonctl.sh 做 DNS/抓包诊断。
+  公网 47989/47984/串流防火墙和 redirect 状态由 https-shim/ 管。
+  适合客户端对 hostname:47989 发送 TLS ClientHello 的情况。
+```
+
+在 shim mode 下，不建议再让 `moonctl.sh firewall-open` 主导公网阶段，因为它会和 `moonlight-https-shim-nft.service` 持久化安装的 nft 规则重叠。
 
 ## 依赖
 
