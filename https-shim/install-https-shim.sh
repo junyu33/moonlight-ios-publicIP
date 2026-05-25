@@ -12,7 +12,7 @@ if [[ "${EUID}" -eq 0 ]]; then
   exit 1
 fi
 
-: "${MOON_HOST:?Set MOON_HOST in .env, e.g. bar.junyu33.me}"
+: "${MOON_HOST:?Set MOON_HOST in .env, e.g. moon.example.test}"
 : "${LAN_IP:?Set LAN_IP in .env, e.g. 10.0.42.1}"
 : "${PUBLIC_IFACE:?Set PUBLIC_IFACE in .env, e.g. enp3s0}"
 
@@ -21,7 +21,7 @@ fi
 : "${SUNSHINE_HTTPS_PORT:=47984}"
 : "${SUNSHINE_RTSP_PORT:=48010}"
 : "${SUNSHINE_UDP_RANGE:=47998-48010}"
-: "${LE_COMBINED_PEM:=/etc/haproxy/certs/junyu33.pem}"
+: "${LE_COMBINED_PEM:=/etc/haproxy/certs/moon.example.test.pem}"
 : "${SUNSHINE_CREDENTIALS_DIR:=$HOME/.config/sunshine/credentials}"
 : "${SUNSHINE_RESTART_CMD:=systemctl --user restart sunshine}"
 : "${NFT_COMMENT_PREFIX:=moonlight-ios-publicIP:https-shim}"

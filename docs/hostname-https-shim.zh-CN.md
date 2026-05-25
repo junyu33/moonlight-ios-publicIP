@@ -66,7 +66,7 @@ Mode B: hostname-HTTPS-shim mode
 至少：
 
 ```bash
-MOON_HOST=bar.junyu33.me
+MOON_HOST=moon.example.test
 LAN_IP=10.0.42.1
 PUBLIC_IFACE=enp3s0
 ```
@@ -79,8 +79,8 @@ SUNSHINE_HTTP_PORT=47989
 SUNSHINE_HTTPS_PORT=47984
 SUNSHINE_RTSP_PORT=48010
 SUNSHINE_UDP_RANGE=47998-48010
-LE_COMBINED_PEM=/etc/haproxy/certs/junyu33.pem
-SUNSHINE_CREDENTIALS_DIR=/home/junyu33/.config/sunshine/credentials
+LE_COMBINED_PEM=/etc/haproxy/certs/moon.example.test.pem
+SUNSHINE_CREDENTIALS_DIR=/home/user/.config/sunshine/credentials
 SUNSHINE_RESTART_CMD="systemctl --user restart sunshine"
 ```
 
@@ -88,8 +88,8 @@ SUNSHINE_RESTART_CMD="systemctl --user restart sunshine"
 
 ```bash
 sudo install -d -m 700 /etc/haproxy/certs
-sudo sh -c 'cat /path/to/fullchain-or-cert.pem /path/to/private-key.pem > /etc/haproxy/certs/junyu33.pem'
-sudo chmod 600 /etc/haproxy/certs/junyu33.pem
+sudo sh -c 'cat /path/to/fullchain-or-cert.pem /path/to/private-key.pem > /etc/haproxy/certs/moon.example.test.pem'
+sudo chmod 600 /etc/haproxy/certs/moon.example.test.pem
 ```
 
 ## 安装
@@ -154,7 +154,7 @@ server-public-ip:48000 -> phone-public-ip:...
 同时恢复 Sunshine 原始 credentials：
 
 ```bash
-./https-shim/uninstall-https-shim.sh /home/junyu33/.config/sunshine/credentials.bak.YYYYMMDD-HHMMSS
+./https-shim/uninstall-https-shim.sh /home/user/.config/sunshine/credentials.bak.YYYYMMDD-HHMMSS
 ```
 
 ## 已知边界
