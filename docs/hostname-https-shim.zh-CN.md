@@ -20,6 +20,14 @@ Sunshine 主机上执行：
 
 `LE_COMBINED_PEM` 需要指向一份 hostname-valid 的 ACME/Let's Encrypt HAProxy PEM，通常由 `fullchain.pem` 和 `privkey.pem` 拼接生成。
 
+例如，把 `moon.example.test` 替换成 `/etc/letsencrypt/live/` 下实际的证书目录名：
+
+```bash
+sudo mkdir -p /etc/haproxy/certs
+sudo sh -c 'cat /etc/letsencrypt/live/moon.example.test/fullchain.pem /etc/letsencrypt/live/moon.example.test/privkey.pem > /etc/haproxy/certs/moon.example.test.pem'
+sudo chmod 600 /etc/haproxy/certs/moon.example.test.pem
+```
+
 ```bash
 sed -i 's/^MOON_HOST=.*/MOON_HOST=moon.example.test/' .env
 grep -q '^LE_COMBINED_PEM=' .env \
