@@ -209,6 +209,63 @@ up() {
     accept comment "\"\$NFT_COMMENT_PREFIX:public-udp\""
 }
 
+check_line() {
+  local name="\$1"
+  local haystack="\$2"
+  local comment="\$3"
+  shift 3
+
+  local line
+  line="\$(printf '%s\n' "\$haystack" | grep -F "comment \"\$comment\"" || true)"
+  if [[ -z "\$line" ]]; then
+    echo "missing: \$name (\$comment)" >&2
+    return 1
+  fi
+
+  local token
+  for token in "\$@"; do
+    if [[ "\$line" != *"\$token"* ]]; then
+      echo "invalid: \$name missing token: \$token" >&2
+      echo "line: \$line" >&2
+      return 1
+    fi
+  done
+
+  echo "ok: \$name"
+}
+
+status() {
+  local missing=0
+  local nat_rules filter_rules
+
+  nat_rules="\$(nft -a list table ip moonlight_https_nat 2>/dev/null || true)"
+  if [[ -z "\$nat_rules" ]]; then
+    echo "missing: table ip moonlight_https_nat" >&2
+    missing=1
+  else
+    echo "ok: table ip moonlight_https_nat"
+  fi
+
+  filter_rules="\$(nft -a list chain inet filter input 2>/dev/null || true)"
+
+  check_line "public 47989 redirect" "\$nat_rules" "\$NFT_COMMENT_PREFIX:tls-47989-public" \
+    "iifname \"\$PUBLIC_IFACE\"" "tcp dport 47989" "redirect to :\$HAPROXY_TLS_PORT" || missing=1
+
+  check_line "public haproxy accept" "\$filter_rules" "\$NFT_COMMENT_PREFIX:public-haproxy" \
+    "iifname \"\$PUBLIC_IFACE\"" "tcp dport \$HAPROXY_TLS_PORT" "accept" || missing=1
+
+  check_line "public https accept" "\$filter_rules" "\$NFT_COMMENT_PREFIX:public-https" \
+    "iifname \"\$PUBLIC_IFACE\"" "tcp dport \$SUNSHINE_HTTPS_PORT" "accept" || missing=1
+
+  check_line "public rtsp accept" "\$filter_rules" "\$NFT_COMMENT_PREFIX:public-rtsp" \
+    "iifname \"\$PUBLIC_IFACE\"" "tcp dport \$SUNSHINE_RTSP_PORT" "accept" || missing=1
+
+  check_line "public udp accept" "\$filter_rules" "\$NFT_COMMENT_PREFIX:public-udp" \
+    "iifname \"\$PUBLIC_IFACE\"" "udp dport \$SUNSHINE_UDP_RANGE_START-\$SUNSHINE_UDP_RANGE_END" "accept" || missing=1
+
+  return "\$missing"
+}
+
 case "\${1:-up}" in
   up) up ;;
   down) down ;;
@@ -216,8 +273,9 @@ case "\${1:-up}" in
     nft -a list table ip moonlight_https_nat 2>/dev/null || true
     nft -a list chain inet filter input 2>/dev/null | grep -F "\$NFT_COMMENT_PREFIX" || true
     ;;
+  status) status ;;
   *)
-    echo "Usage: \$0 {up|down|list}" >&2
+    echo "Usage: \$0 {up|down|list|status}" >&2
     exit 2
     ;;
 esac
@@ -254,6 +312,7 @@ echo
 echo "== Status =="
 sudo systemctl --no-pager --full status moonlight-47989-haproxy.service || true
 sudo /usr/local/sbin/moonlight-https-shim-nft list
+sudo /usr/local/sbin/moonlight-https-shim-nft status
 sudo ss -lntp | grep -E "47984|47989|48489" || true
 
 echo

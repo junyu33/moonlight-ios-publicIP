@@ -135,7 +135,14 @@ openssl s_client -connect 127.0.0.1:47984 -servername "$MOON_HOST" </dev/null 2>
 sudo systemctl status moonlight-47989-haproxy.service
 sudo systemctl status moonlight-https-shim-nft.service
 sudo /usr/local/sbin/moonlight-https-shim-nft list
+sudo /usr/local/sbin/moonlight-https-shim-nft status
 sudo ss -lntp | grep -E '47984|47989|48489'
+```
+
+`moonlight-https-shim-nft.service` 是带 `RemainAfterExit=yes` 的 oneshot service，所以 `active (exited)` 只表示上次启动成功，不证明 nft 规则现在仍存在。排查 Moonlight 可用性前，用 helper 的机器可检查状态：
+
+```bash
+sudo /usr/local/sbin/moonlight-https-shim-nft status || sudo systemctl restart moonlight-https-shim-nft.service
 ```
 
 公网串流抓包可见：
@@ -180,9 +187,12 @@ Enter Desktop again over public Internet
 
 ```bash
 sudo ./https-shim/vpn.sh down
+sudo /usr/local/sbin/moonlight-https-shim-nft status || sudo systemctl restart moonlight-https-shim-nft.service
 ```
 
 不要停止持久化 public HTTPS shim services。
+
+避免使用匹配裸 `moonlight-ios-publicIP` 的宽泛手动清理命令，因为它可能同时删除 public 和 VPN 规则。临时 VPN 规则用 `sudo ./https-shim/vpn.sh down` 清理，持久化 public shim 用 `./https-shim/uninstall-https-shim.sh` 清理。
 
 ## 卸载
 

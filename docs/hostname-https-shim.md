@@ -135,7 +135,14 @@ Services and rules:
 sudo systemctl status moonlight-47989-haproxy.service
 sudo systemctl status moonlight-https-shim-nft.service
 sudo /usr/local/sbin/moonlight-https-shim-nft list
+sudo /usr/local/sbin/moonlight-https-shim-nft status
 sudo ss -lntp | grep -E '47984|47989|48489'
+```
+
+`moonlight-https-shim-nft.service` is a oneshot service with `RemainAfterExit=yes`, so `active (exited)` only means the last start succeeded. It does not prove the nft rules still exist. Use the helper's machine-checkable status before debugging Moonlight availability:
+
+```bash
+sudo /usr/local/sbin/moonlight-https-shim-nft status || sudo systemctl restart moonlight-https-shim-nft.service
 ```
 
 Public streaming capture should show packets such as:
@@ -180,9 +187,12 @@ After confirming public streaming works, remove only the temporary VPN add/pair 
 
 ```bash
 sudo ./https-shim/vpn.sh down
+sudo /usr/local/sbin/moonlight-https-shim-nft status || sudo systemctl restart moonlight-https-shim-nft.service
 ```
 
 Do not stop the persistent public HTTPS shim services.
+
+Avoid broad manual cleanup commands that match plain `moonlight-ios-publicIP`, because they can remove both public and VPN rules. Use `sudo ./https-shim/vpn.sh down` for temporary VPN rules and `./https-shim/uninstall-https-shim.sh` for the persistent public shim.
 
 ## Uninstall
 
