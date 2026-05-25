@@ -18,8 +18,13 @@ The `https-shim/` scripts are an extra public-mode backend for the case where Mo
 
 ```text
 https-shim/install-https-shim.sh
+  persistent public-use phase:
   installs the 47989 HTTPS shim, makes Sunshine 47984 present a hostname-valid cert,
   and persists HAProxy/nft/systemd state
+
+https-shim/vpn.sh
+  temporary VPN fresh-add/pair phase:
+  redirects WG_IFACE:47989 to 48489 while keeping 47984 as native Sunshine mTLS
 
 https-shim/uninstall-https-shim.sh
   removes the shim and can optionally restore Sunshine's original cert/key
@@ -142,6 +147,42 @@ server-public-ip:48000 -> phone-public-ip:...
 ```
 
 `tcpdump` may show `bad udp cksum` because of checksum offload. Treat actual streaming behavior as the source of truth.
+
+## Fresh Add/Pair Over VPN
+
+The persistent public shim handles public use. Fresh add/pair can still require WireGuard and split DNS because official Moonlight iOS cannot add a public IPv4 host directly. If iOS sends TLS ClientHello to `<MOON_HOST>:47989` even while `MOON_HOST` resolves to `LAN_IP`, add the temporary VPN shim rules:
+
+```bash
+sudo ./wgctl.sh up
+sudo ./moonctl.sh dns-start
+sudo ./https-shim/vpn.sh up
+```
+
+On iPhone:
+
+```text
+Enable WireGuard
+Open official Moonlight iOS
+Add MOON_HOST
+Pair
+Enter Desktop once
+```
+
+Then switch to public mode:
+
+```text
+Disable WireGuard
+Refresh the saved Moonlight host
+Enter Desktop again over public Internet
+```
+
+After confirming public streaming works, remove only the temporary VPN add/pair rules:
+
+```bash
+sudo ./https-shim/vpn.sh down
+```
+
+Do not stop the persistent public HTTPS shim services.
 
 ## Uninstall
 

@@ -94,8 +94,20 @@ sleep 1
 
 echo
 echo "== Verify Sunshine HTTPS/mTLS endpoint presents public cert =="
+CERT_DUMP="$TMPDIR/sunshine-47984-cert.pem"
+
+set +o pipefail
 openssl s_client -connect "127.0.0.1:$SUNSHINE_HTTPS_PORT" -servername "$MOON_HOST" </dev/null 2>/dev/null \
-  | openssl x509 -noout -subject -issuer -fingerprint -sha256
+  | openssl x509 -out "$CERT_DUMP" >/dev/null
+CERT_EXTRACT_STATUS=$?
+set -o pipefail
+
+if [[ "$CERT_EXTRACT_STATUS" -ne 0 ]]; then
+  echo "Failed to extract Sunshine 47984 server certificate." >&2
+  exit 1
+fi
+
+openssl x509 -in "$CERT_DUMP" -noout -subject -issuer -fingerprint -sha256
 
 echo
 echo "== Install HAProxy config =="

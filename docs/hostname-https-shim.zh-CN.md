@@ -18,8 +18,13 @@ depsctl.sh    管运行时依赖检查和安装
 
 ```text
 https-shim/install-https-shim.sh
+  持久化公网使用阶段：
   安装 47989 HTTPS shim，让 Sunshine 47984 呈现 hostname-valid 证书，
   并持久化 HAProxy/nft/systemd 状态
+
+https-shim/vpn.sh
+  临时 VPN fresh-add/pair 阶段：
+  把 WG_IFACE:47989 redirect 到 48489，同时保持 47984 为 Sunshine 原生 mTLS
 
 https-shim/uninstall-https-shim.sh
   卸载 shim，必要时恢复 Sunshine 原始 cert/key
@@ -142,6 +147,42 @@ server-public-ip:48000 -> phone-public-ip:...
 ```
 
 `tcpdump` 显示 `bad udp cksum` 通常是 checksum offload，不等于坏包；以实际串流是否流畅为准。
+
+## 通过 VPN fresh add / pair
+
+持久化 public shim 负责公网日常使用。首次添加/配对仍可能需要 WireGuard 和 split DNS，因为官方 Moonlight iOS 不能直接 fresh-add 公网 IPv4 host。如果 `MOON_HOST` 已经解析到 `LAN_IP`，但 iOS 仍然对 `<MOON_HOST>:47989` 发送 TLS ClientHello，请添加临时 VPN shim 规则：
+
+```bash
+sudo ./wgctl.sh up
+sudo ./moonctl.sh dns-start
+sudo ./https-shim/vpn.sh up
+```
+
+iPhone 上：
+
+```text
+Enable WireGuard
+Open official Moonlight iOS
+Add MOON_HOST
+Pair
+Enter Desktop once
+```
+
+然后切到公网模式：
+
+```text
+Disable WireGuard
+Refresh the saved Moonlight host
+Enter Desktop again over public Internet
+```
+
+确认公网串流可用后，只移除临时 VPN add/pair 规则：
+
+```bash
+sudo ./https-shim/vpn.sh down
+```
+
+不要停止持久化 public HTTPS shim services。
 
 ## 卸载
 
