@@ -18,6 +18,8 @@ AAAA: none
 
 Sunshine 主机上执行：
 
+`LE_COMBINED_PEM` 需要指向一份 hostname-valid 的 ACME/Let's Encrypt HAProxy PEM，通常由 `fullchain.pem` 和 `privkey.pem` 拼接生成。
+
 ```bash
 sed -i 's/^MOON_HOST=.*/MOON_HOST=moon.example.test/' .env
 grep -q '^LE_COMBINED_PEM=' .env \
