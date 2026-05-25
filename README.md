@@ -1,6 +1,6 @@
 # Moonlight iOS + Sunshine Split DNS
 
-[中文 README](README.zh-CN.md) | [Full guide](docs/full-guide.md)
+[中文 README](README.zh-CN.md) | [Full guide](docs/full-guide.md) | [Hostname HTTPS shim](docs/hostname-https-shim.zh-CN.md)
 
 Minimal helper scripts for using one disposable hostname with the official Moonlight iOS client and Sunshine.
 
@@ -12,6 +12,8 @@ Use over public Internet   -> <MOON_HOST> resolves to the public IP
 ```
 
 For complete setup, troubleshooting, cleanup, and command reference details, read [docs/full-guide.md](docs/full-guide.md).
+
+If Moonlight/VoidLink iOS sends TLS ClientHello to `<MOON_HOST>:47989` in hostname mode, see [Hostname HTTPS shim](docs/hostname-https-shim.zh-CN.md). The working shape is asymmetric: proxy only `47989` with a public certificate, and make Sunshine's native `47984` present the same hostname-valid public certificate so its mTLS endpoint remains intact.
 
 ## Requirements
 
