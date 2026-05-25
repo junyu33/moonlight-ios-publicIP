@@ -1,6 +1,6 @@
 # 持久化 hostname HTTPS shim
 
-[English](hostname-https-shim.md) | [中文 TLDR README](../README.zh-CN.md)
+[中文 TLDR README](../README.zh-CN.md) | [完整手册](full-guide.zh-CN.md)
 
 本文把已经验证成功的实验态整理成可重复安装的持久化配置。
 

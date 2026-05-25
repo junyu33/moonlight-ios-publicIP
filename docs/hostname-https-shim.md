@@ -1,6 +1,6 @@
 # Persistent Hostname HTTPS Shim
 
-[中文](hostname-https-shim.zh-CN.md) | [TLDR README](../README.md)
+[TLDR README](../README.md) | [Full guide](full-guide.md)
 
 This document turns the verified hostname HTTPS workaround into a repeatable persistent setup.
 

@@ -1,6 +1,6 @@
 # Moonlight iOS + Sunshine Split DNS
 
-[中文完整手册](full-guide.zh-CN.md) | [TLDR README](../README.md)
+[中文完整手册](full-guide.zh-CN.md) | [TLDR README](../README.md) | [Hostname HTTPS shim](hostname-https-shim.md)
 
 Use one hostname with the official Moonlight iOS client:
 

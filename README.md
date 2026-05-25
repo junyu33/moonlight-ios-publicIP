@@ -13,7 +13,7 @@ Use over public Internet   -> <MOON_HOST> resolves to the public IP
 
 For complete setup, troubleshooting, cleanup, and command reference details, read [docs/full-guide.md](docs/full-guide.md).
 
-If Moonlight/VoidLink iOS sends TLS ClientHello to `<MOON_HOST>:47989` in hostname mode, use [Hostname HTTPS shim](docs/hostname-https-shim.md) ([中文](docs/hostname-https-shim.zh-CN.md)).
+If Moonlight/VoidLink iOS sends TLS ClientHello to `<MOON_HOST>:47989` in hostname mode, use [Hostname HTTPS shim](docs/hostname-https-shim.md).
 
 The top-level scripts remain the base split-DNS / VPN add-and-pair toolkit:
 

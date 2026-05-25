@@ -1,6 +1,6 @@
 # Moonlight iOS + Sunshine Split DNS
 
-[English full guide](full-guide.md) | [中文 TLDR README](../README.zh-CN.md)
+[English full guide](full-guide.md) | [中文 TLDR README](../README.zh-CN.md) | [hostname HTTPS shim](hostname-https-shim.zh-CN.md)
 
 使用官方 Moonlight iOS 客户端时，让同一个域名在两个阶段解析到不同地址：
 

@@ -13,7 +13,7 @@ VPN / 内网添加配对阶段 -> <MOON_HOST> 解析到 <LAN_IP>
 
 完整设置、排查、清理和命令参考见 [docs/full-guide.zh-CN.md](docs/full-guide.zh-CN.md)。
 
-如果 Moonlight/VoidLink iOS 在 hostname 模式下对 `<MOON_HOST>:47989` 发送 TLS ClientHello，请使用 [hostname HTTPS shim](docs/hostname-https-shim.zh-CN.md)（[English](docs/hostname-https-shim.md)）。
+如果 Moonlight/VoidLink iOS 在 hostname 模式下对 `<MOON_HOST>:47989` 发送 TLS ClientHello，请使用 [hostname HTTPS shim](docs/hostname-https-shim.zh-CN.md)。
 
 顶层脚本是 split-DNS / VPN 添加配对方案的基础设施：
 
