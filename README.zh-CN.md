@@ -13,7 +13,7 @@ VPN / 内网添加配对阶段 -> <MOON_HOST> 解析到 <LAN_IP>
 
 完整设置、排查、清理和命令参考见 [docs/full-guide.zh-CN.md](docs/full-guide.zh-CN.md)。
 
-如果 Moonlight/VoidLink iOS 在 hostname 模式下对 `<MOON_HOST>:47989` 发送 TLS ClientHello，请使用 [hostname HTTPS shim](docs/hostname-https-shim.zh-CN.md)。
+如果 Moonlight/VoidLink iOS 在 hostname 模式下对 `<MOON_HOST>:47989` 发送 TLS ClientHello，请使用 [hostname HTTPS shim](docs/hostname-https-shim.zh-CN.md)。如果在 HTTPS shim 实验后测试 WireGuard 内网 IP 直连，请先恢复 Sunshine 原始自签 credentials，或者继续使用 hostname + split DNS；见[排障说明](docs/full-guide.zh-CN.md#wireguard-内网-ip-直连时-pairing-failed)。
 
 顶层脚本是 split-DNS / VPN 添加配对方案的基础设施：
 

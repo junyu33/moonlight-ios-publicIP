@@ -13,7 +13,7 @@ Use over public Internet   -> <MOON_HOST> resolves to the public IP
 
 For complete setup, troubleshooting, cleanup, and command reference details, read [docs/full-guide.md](docs/full-guide.md).
 
-If Moonlight/VoidLink iOS sends TLS ClientHello to `<MOON_HOST>:47989` in hostname mode, use [Hostname HTTPS shim](docs/hostname-https-shim.md).
+If Moonlight/VoidLink iOS sends TLS ClientHello to `<MOON_HOST>:47989` in hostname mode, use [Hostname HTTPS shim](docs/hostname-https-shim.md). If you test WireGuard direct IP after HTTPS shim experiments, restore Sunshine's original self-signed credentials first or keep using hostname + split DNS; see [troubleshooting](docs/full-guide.md#pairing-failed-when-using-wireguard-direct-ip).
 
 The top-level scripts remain the base split-DNS / VPN add-and-pair toolkit:
 

@@ -320,6 +320,74 @@ sudo ./moonctl.sh dns-start
 
 为 split-DNS/plain mode 换一个 HTTP-clean 域名，或者把公网阶段切到 [hostname HTTPS shim](hostname-https-shim.zh-CN.md)。在 shim mode 下，`wgctl.sh` 仍可复用，`moonctl.sh` 仍可用于 DNS/抓包诊断，但公网防火墙和 redirect 状态由 `https-shim/install-https-shim.sh` 和 `moonlight-https-shim-nft.service` 管。
 
+### WireGuard 内网 IP 直连时 pairing failed
+
+如果 `47989` 正常，但 `47984` TCP 连接成功、收到服务端 TLS 响应后客户端立刻发送 `FIN`，优先怀疑证书和 hostname/IP 不匹配，而不是路由问题。这个情况常见于测试过 HTTPS shim / Let's Encrypt 证书模式后，又在 Moonlight 里直接添加 WireGuard 内网 IP，例如 `10.0.42.1`。
+
+直连 IP mode 下，Sunshine 应使用原始自签 credentials，或者使用 SAN 匹配该 IP 的证书。hostname mode 下，更推荐继续用 `<MOON_HOST>` 和 split DNS，不要直接添加内网 IP。Sunshine 日志可能为空；抓包和证书检查通常更有用。
+
+抓 WireGuard 路径：
+
+```bash
+sudo tcpdump -ni moonwg0 host 10.0.42.2 and \
+  '(tcp port 47989 or tcp port 47984 or tcp port 48010 or udp portrange 47998-48010)'
+```
+
+检查 Sunshine 在 `47984` 呈现的证书：
+
+```bash
+openssl s_client -connect 10.0.42.1:47984 -servername 10.0.42.1 -showcerts </dev/null 2>/dev/null \
+  | openssl x509 -noout -subject -issuer -ext subjectAltName -fingerprint -sha256
+```
+
+检查当前 Sunshine credential 文件：
+
+```bash
+openssl x509 -in ~/.config/sunshine/credentials/cacert.pem -noout \
+  -subject -issuer -ext subjectAltName -fingerprint -sha256
+```
+
+查找可恢复的备份时，选择原始 Sunshine 自签证书。它的 `subject` 和 `issuer` 相同，不是 Let's Encrypt，并且不包含只适合 hostname 的 SAN，例如 `DNS:*.example.test`。
+
+```bash
+bash -c '
+for d in "$HOME"/.config/sunshine/credentials.bak.*; do
+  echo
+  echo "== $d =="
+  if [ -f "$d/cacert.pem" ]; then
+    openssl x509 -in "$d/cacert.pem" -noout \
+      -subject -issuer -ext subjectAltName -fingerprint -sha256 2>/dev/null \
+      || echo "not a readable cert"
+  fi
+done
+'
+```
+
+典型原始 Sunshine 证书类似：
+
+```text
+subject=CN=Sunshine Gamestream Host
+issuer=CN=Sunshine Gamestream Host
+```
+
+如果你明确要恢复 direct IP mode，把 `src=` 改成你选中的备份目录：
+
+```bash
+src="$HOME/.config/sunshine/credentials.bak.YYYYMMDD-HHMMSS"
+
+ts=$(date +%Y%m%d-%H%M%S)
+mkdir -p ~/Desktop/backup/sunshine-credentials-current-$ts
+cp -a ~/.config/sunshine/credentials/* ~/Desktop/backup/sunshine-credentials-current-$ts/
+
+sudo cp -a "$src/cacert.pem" ~/.config/sunshine/credentials/cacert.pem
+sudo cp -a "$src/cakey.pem"  ~/.config/sunshine/credentials/cakey.pem
+sudo chown "$USER:$USER" ~/.config/sunshine/credentials/cacert.pem ~/.config/sunshine/credentials/cakey.pem
+chmod 644 ~/.config/sunshine/credentials/cacert.pem
+chmod 600 ~/.config/sunshine/credentials/cakey.pem
+
+systemctl --user restart sunshine 2>/dev/null || sudo systemctl restart sunshine
+```
+
 ### 公网 SYN 到了但没有 SYN-ACK
 
 重新放通临时公网防火墙规则：

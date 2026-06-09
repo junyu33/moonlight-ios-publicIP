@@ -320,6 +320,74 @@ sudo ./moonctl.sh dns-start
 
 Use a different HTTP-clean hostname for split-DNS/plain mode, or switch the public phase to [Hostname HTTPS shim](hostname-https-shim.md). In shim mode, `wgctl.sh` remains reusable and `moonctl.sh` remains useful for DNS/capture diagnostics, but public firewall/redirect state is owned by `https-shim/install-https-shim.sh` and `moonlight-https-shim-nft.service`.
 
+### Pairing Failed When Using WireGuard Direct IP
+
+If `47989` works but `47984` connects, receives the server TLS response, and then the client immediately sends `FIN`, suspect a certificate/hostname mismatch rather than a routing problem. This can happen after testing HTTPS shim / Let's Encrypt certificate mode and then adding the WireGuard inner IP directly in Moonlight, such as `10.0.42.1`.
+
+For direct IP mode, Sunshine should use its original self-signed credentials, or a certificate whose SAN matches the IP. For hostname mode, prefer `<MOON_HOST>` with split DNS instead of adding the direct IP. Sunshine logs may be empty; packet capture and certificate inspection are usually more useful.
+
+Capture the WireGuard path:
+
+```bash
+sudo tcpdump -ni moonwg0 host 10.0.42.2 and \
+  '(tcp port 47989 or tcp port 47984 or tcp port 48010 or udp portrange 47998-48010)'
+```
+
+Inspect what Sunshine presents on `47984`:
+
+```bash
+openssl s_client -connect 10.0.42.1:47984 -servername 10.0.42.1 -showcerts </dev/null 2>/dev/null \
+  | openssl x509 -noout -subject -issuer -ext subjectAltName -fingerprint -sha256
+```
+
+Inspect the active Sunshine credential file:
+
+```bash
+openssl x509 -in ~/.config/sunshine/credentials/cacert.pem -noout \
+  -subject -issuer -ext subjectAltName -fingerprint -sha256
+```
+
+To find a safe restore candidate, inspect backups and pick the original Sunshine self-signed certificate. Its `subject` and `issuer` are the same, it is not Let's Encrypt, and it does not contain a hostname-only SAN such as `DNS:*.example.test`.
+
+```bash
+bash -c '
+for d in "$HOME"/.config/sunshine/credentials.bak.*; do
+  echo
+  echo "== $d =="
+  if [ -f "$d/cacert.pem" ]; then
+    openssl x509 -in "$d/cacert.pem" -noout \
+      -subject -issuer -ext subjectAltName -fingerprint -sha256 2>/dev/null \
+      || echo "not a readable cert"
+  fi
+done
+'
+```
+
+A typical original Sunshine certificate looks like:
+
+```text
+subject=CN=Sunshine Gamestream Host
+issuer=CN=Sunshine Gamestream Host
+```
+
+If you intentionally want to restore direct IP mode, adapt `src=` to the backup directory you selected:
+
+```bash
+src="$HOME/.config/sunshine/credentials.bak.YYYYMMDD-HHMMSS"
+
+ts=$(date +%Y%m%d-%H%M%S)
+mkdir -p ~/Desktop/backup/sunshine-credentials-current-$ts
+cp -a ~/.config/sunshine/credentials/* ~/Desktop/backup/sunshine-credentials-current-$ts/
+
+sudo cp -a "$src/cacert.pem" ~/.config/sunshine/credentials/cacert.pem
+sudo cp -a "$src/cakey.pem"  ~/.config/sunshine/credentials/cakey.pem
+sudo chown "$USER:$USER" ~/.config/sunshine/credentials/cacert.pem ~/.config/sunshine/credentials/cakey.pem
+chmod 644 ~/.config/sunshine/credentials/cacert.pem
+chmod 600 ~/.config/sunshine/credentials/cakey.pem
+
+systemctl --user restart sunshine 2>/dev/null || sudo systemctl restart sunshine
+```
+
 ### Public SYN Arrives But No SYN-ACK
 
 Open the temporary public firewall rules again:
